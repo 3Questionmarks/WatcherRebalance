@@ -1,8 +1,8 @@
 {
-  "WATCHER_REBALANCE_TOKEN.title": "Token",
-  "WATCHER_REBALANCE_TOKEN.description": "Temporary cards that are generated in combat by various cards or relics.",
-  "WATCHER_REBALANCE_ENCHANT.title": "Enchant",
-  "WATCHER_REBALANCE_ENCHANT.description": "Permanently add an Enchantment to a card.",
+  "WATCHERREBALANCE_TOKEN.title": "Token",
+  "WATCHERREBALANCE_TOKEN.description": "Temporary cards that are generated in combat by various cards or relics.",
+  "WATCHERREBALANCE_ENCHANT.title": "Enchant",
+  "WATCHERREBALANCE_ENCHANT.description": "Permanently add an Enchantment to a card.",
   "WATCHERREBALANCE_DIVINE.title": "Divine",
   "WATCHERREBALANCE_DIVINE.description": "Does the following additional effect while you are in [gold]Divinity[/gold]."
 }
