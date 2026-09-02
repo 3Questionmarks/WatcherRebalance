@@ -1,5 +1,7 @@
 A mod that aims to port The Watcher from Slay the Spire 1 to Slay the Spire 2, but i a way that is designed to make her feel like a natural part of STS2's ecosystem.
 
+Full card effects + Changelog: https://docs.google.com/spreadsheets/d/1a5RIFOfQ--Bagtl7E11VCqbMfHOES77KaBaTj10vF6Y
+
 Steam Workshop page: https://steamcommunity.com/sharedfiles/filedetails/?id=3793048512
 
 
