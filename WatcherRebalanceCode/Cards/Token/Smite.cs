@@ -14,6 +14,7 @@ using Watcher.Code.Cards.Token;
 using Watcher.Code.Extensions;
 using Watcher.Code.Stances;
 using WatcherRebalance.WatcherRebalanceCode.Powers;
+using WatcherRebalance.WatcherRebalanceCode.Tooltips;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Token;
 
@@ -31,7 +32,7 @@ public static class SmitePatch
     {
         AddStrengthVar(__instance);
         AddStrengthTooltip(__instance);
-        AddDivinityTooltip(__instance);
+        WatcherRebalanceTips.AddDivineTip(__instance);
     }
 
 
@@ -107,37 +108,6 @@ public static class SmitePatch
             {
                 strengthTip
             });
-    }
-
-
-    // =========================================================
-    // DIVINITY TOOLTIP
-    // =========================================================
-
-    private static void AddDivinityTooltip(
-        Smite card)
-    {
-        MethodInfo? withStanceTip =
-            typeof(WatcherCardModel)
-                .GetMethods(
-                    BindingFlags.Instance |
-                    BindingFlags.NonPublic)
-                .FirstOrDefault(m =>
-                    m.Name == "WithStanceTip" &&
-                    m.IsGenericMethodDefinition &&
-                    m.GetParameters().Length == 0);
-
-        if (withStanceTip == null)
-        {
-            throw new MissingMethodException(
-                "WatcherRebalance: Could not find WatcherCardModel.WithStanceTip.");
-        }
-
-        withStanceTip
-            .MakeGenericMethod(typeof(DivinityStance))
-            .Invoke(
-                card,
-                null);
     }
 
 

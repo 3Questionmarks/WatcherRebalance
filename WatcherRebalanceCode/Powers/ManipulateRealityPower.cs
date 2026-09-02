@@ -1,72 +1,49 @@
 ﻿using BaseLib.Commands;
 using MegaCrit.Sts2.Core.Commands;
-using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.Entities.Creatures;
+using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Models;
-using WatcherRebalance.WatcherRebalanceCode.Powers;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Powers;
 
 public sealed class ManipulateRealityPower
     : WatcherRebalancePower
 {
-    // ================================================================
-    // POWER SETUP
-    // ================================================================
-
     public override PowerType Type =>
         PowerType.Buff;
-
 
     public override PowerStackType StackType =>
         PowerStackType.Single;
 
 
     // ================================================================
-    // IMMEDIATE RESOLUTION
+    // RESOLVE THIS PLAYER'S COPY
     // ================================================================
     //
-    // AfterPowerAmountChanged gives us a real PlayerChoiceContext.
+    // The card decides which PlayerChoiceContext this receives:
     //
-    // This is important because Scry opens a player choice and cannot
-    // safely be performed from AfterApplied(), which has no context.
+    // CARD OWNER:
+    //     The original PlayCardAction context.
     //
-    // Each copy of this power belongs to the player who needs to
-    // perform the Scry.
+    // OTHER PLAYERS:
+    //     Their own HookPlayerChoiceContext.
     //
+    // This lets all players have independent multiplayer choices
+    // without creating a hook action behind the card owner's own
+    // currently-running PlayCardAction.
     // ================================================================
 
-    public override async Task AfterPowerAmountChanged(
-        PlayerChoiceContext choiceContext,
-        PowerModel power,
-        decimal amount,
-        Creature? applier,
-        CardModel? cardSource)
+    public async Task Resolve(
+        PlayerChoiceContext choiceContext)
     {
-        // This hook can run when other powers change too.
-        // Only respond to this specific instance.
-        if (power != this)
-            return;
-
-
-        // We only care about gaining the power.
-        if (amount <= 0)
-            return;
-
-
-        // The power is attached directly to the affected player's
-        // creature, so Owner.Player is the player who should make
-        // the choice.
-        var player =
+        Player? player =
             Owner.Player;
 
 
         if (player == null ||
             !Owner.IsAlive)
         {
-            RemoveInternal();
+            await PowerCmd.Remove(this);
             return;
         }
 
@@ -78,12 +55,6 @@ public sealed class ManipulateRealityPower
         // ============================================================
         // SCRY
         // ============================================================
-        //
-        // This now originates from the power attached to THIS
-        // player's creature instead of Manipulate Reality trying
-        // to control another player's piles from the card.
-        //
-        // ============================================================
 
         await ScryCmd.Execute(
             choiceContext,
@@ -91,14 +62,12 @@ public sealed class ManipulateRealityPower
             scryAmount);
 
 
-        // Player may theoretically no longer be alive after the
-        // choice resolves.
+        // ============================================================
+        // DRAW 1
+        // ============================================================
+
         if (Owner.IsAlive)
         {
-            // ========================================================
-            // DRAW 1
-            // ========================================================
-
             await CardPileCmd.Draw(
                 choiceContext,
                 1,
@@ -107,13 +76,15 @@ public sealed class ManipulateRealityPower
 
 
         // ============================================================
-        // REMOVE THE TEMPORARY POWER
+        // CONSUME POWER
         // ============================================================
         //
-        // It has completed its one-shot job.
+        // Use the proper command rather than RemoveInternal().
         //
+        // This keeps the removal in the synchronized game-state
+        // command flow on every peer.
         // ============================================================
 
-        RemoveInternal();
+        await PowerCmd.Remove(this);
     }
 }

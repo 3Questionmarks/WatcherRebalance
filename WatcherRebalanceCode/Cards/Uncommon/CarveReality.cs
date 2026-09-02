@@ -61,7 +61,7 @@ public static class CarveRealityPatch
     private static void ConstructorPostfix(
         CarveReality __instance)
     {
-        AddDivinityTooltip(__instance);
+        WatcherRebalanceTips.AddDivineTip(__instance);
         AddReplayTooltip(__instance);
         WatcherRebalanceTips.AddTokenTip(__instance);
     }
@@ -148,30 +148,6 @@ public static class CarveRealityPatch
         {
             selectedCard.BaseReplayCount++;
         }
-    }
-
-    private static void AddDivinityTooltip(
-        CarveReality card)
-    {
-        MethodInfo? withStanceTip =
-            typeof(WatcherCardModel)
-                .GetMethods(
-                    BindingFlags.Instance |
-                    BindingFlags.NonPublic)
-                .FirstOrDefault(m =>
-                    m.Name == "WithStanceTip" &&
-                    m.IsGenericMethodDefinition &&
-                    m.GetParameters().Length == 0);
-
-        if (withStanceTip == null)
-        {
-            throw new MissingMethodException(
-                "Could not find WatcherCardModel.WithStanceTip.");
-        }
-
-        withStanceTip
-            .MakeGenericMethod(typeof(DivinityStance))
-            .Invoke(card, null);
     }
 
     private static void AddReplayTooltip(

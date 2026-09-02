@@ -7,7 +7,6 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using Watcher.Code.Abstract;
 using Watcher.Code.Cards.Ancient;
-using Watcher.Code.Cards.Uncommon;
 using Watcher.Code.Powers;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Ancient;
@@ -30,6 +29,14 @@ namespace WatcherRebalance.WatcherRebalanceCode.Cards.Ancient;
 // - Uses the real RushdownPower.
 // - Upgrade increases draw from 2 -> 3.
 // - Cost remains 1 after upgrading.
+//
+// NOTE:
+//
+// The ORIGINAL Uncommon Rushdown is removed by:
+//
+//     RemovedWatcherCards.cs
+//
+// Do not add its removal patch back into this file.
 // ============================================================================
 
 [HarmonyPatch(typeof(AncientCard))]
@@ -59,9 +66,9 @@ public static class RushdownPatch
         //     CardRarity.Ancient,
         //     TargetType.None)
         //
-        // We change the cost:
+        // New:
         //
-        // 2 -> 1
+        // 1 Energy
         // --------------------------------------------------------------------
 
         ConstructorInfo? watcherConstructor =
@@ -83,16 +90,15 @@ public static class RushdownPatch
 
 
         // --------------------------------------------------------------------
-        // Find the original:
+        // Find original Ethereal keyword call.
+        //
+        // AncientCard originally registers:
         //
         // WithKeyword(
         //     CardKeyword.Ethereal,
         //     UpgradeType.Remove)
         //
-        // We replace this call with our own no-op helper.
-        //
-        // This removes Ethereal from the card completely without trying to
-        // mutate the canonical model after construction.
+        // We replace it with a no-op helper so Ethereal is never registered.
         // --------------------------------------------------------------------
 
         MethodInfo? withKeyword =
@@ -126,23 +132,24 @@ public static class RushdownPatch
 
 
         // --------------------------------------------------------------------
-        // Original Ancient Card power:
+        // Original Ancient power:
         //
         // WithPower<AncientCardPower>(
         //     50,
         //     false)
         //
-        // We replace this with:
+        // Replace with:
         //
         // WithPower<RushdownPower>(
         //     2,
         //     1,
         //     false)
         //
-        // Result:
+        // Base:
+        //     Draw 2
         //
-        // Base:    2
-        // Upgrade: 3
+        // Upgrade:
+        //     Draw 3
         // --------------------------------------------------------------------
 
         MethodInfo? originalWithPower =
@@ -183,7 +190,7 @@ public static class RushdownPatch
 
 
         // ====================================================================
-        // APPLY CONSTRUCTOR PATCHES
+        // APPLY PATCHES
         // ====================================================================
 
         for (int i = 0; i < code.Count; i++)
@@ -191,27 +198,12 @@ public static class RushdownPatch
             // ----------------------------------------------------------------
             // COST
             //
-            // Original:
-            // 2 Energy
-            //
-            // New:
-            // 1 Energy
-            //
-            // No cost upgrade is added, so it stays at 1 when upgraded.
+            // 2 -> 1
             // ----------------------------------------------------------------
 
             if (code[i].operand is ConstructorInfo constructor &&
                 constructor == watcherConstructor)
             {
-                // Stack immediately before WatcherCardModel ctor:
-                //
-                // this
-                // cost
-                // type
-                // rarity
-                // target
-                // shouldShowInCardLibrary
-
                 ReplaceInt(
                     code,
                     i - 5,
@@ -223,16 +215,6 @@ public static class RushdownPatch
 
             // ----------------------------------------------------------------
             // REMOVE ETHEREAL
-            //
-            // Instead of allowing:
-            //
-            // WithKeyword(
-            //     CardKeyword.Ethereal,
-            //     UpgradeType.Remove)
-            //
-            // to register Ethereal, replace the method call with a helper
-            // that consumes the same stack arguments but returns the card
-            // unchanged.
             // ----------------------------------------------------------------
 
             if (code[i].Calls(withKeyword))
@@ -251,14 +233,15 @@ public static class RushdownPatch
                 replacement.blocks.AddRange(
                     original.blocks);
 
-                code[i] = replacement;
+                code[i] =
+                    replacement;
 
                 continue;
             }
 
 
             // ----------------------------------------------------------------
-            // AncientCardPower -> RushdownPower
+            // ANCIENT CARD POWER -> RUSHDOWN POWER
             // ----------------------------------------------------------------
 
             if (code[i].Calls(originalWithPower))
@@ -277,7 +260,8 @@ public static class RushdownPatch
                 replacement.blocks.AddRange(
                     original.blocks);
 
-                code[i] = replacement;
+                code[i] =
+                    replacement;
             }
         }
 
@@ -290,16 +274,10 @@ public static class RushdownPatch
     // REMOVE ETHEREAL
     // ========================================================================
     //
-    // ConstructedCardModel.UpgradeType is protected, so our Harmony patch
-    // cannot name that enum directly.
+    // ConstructedCardModel.UpgradeType is protected.
     //
-    // At IL level the enum is represented as an Int32, so this helper consumes:
-    //
-    // ConstructedCardModel
-    // CardKeyword
-    // Int32
-    //
-    // and simply returns the card without registering the keyword.
+    // At IL level it is represented by an Int32, so this helper accepts the
+    // same arguments as WithKeyword but simply returns the card unchanged.
     // ========================================================================
 
     private static ConstructedCardModel RemoveEtherealKeyword(
@@ -312,7 +290,7 @@ public static class RushdownPatch
 
 
     // ========================================================================
-    // REPLACE ANCIENT POWER VARIABLE
+    // REPLACE ANCIENT POWER
     // ========================================================================
 
     private static ConstructedCardModel ReplaceAncientPower(
@@ -354,7 +332,7 @@ public static class RushdownPatch
                     [
                         2,      // Base: draw 2
                         1,      // Upgrade: +1 -> draw 3
-                        false   // Wrath tooltip already exists
+                        false
                     ]);
 
 
@@ -372,15 +350,6 @@ public static class RushdownPatch
 
     // ========================================================================
     // ON PLAY
-    // ========================================================================
-    //
-    // Original:
-    //
-    // Apply AncientCardPower.
-    //
-    // New:
-    //
-    // Apply RushdownPower.
     // ========================================================================
 
     [HarmonyPatch("OnPlay")]
@@ -433,125 +402,7 @@ public static class RushdownPatch
         replacement.blocks.AddRange(
             original.blocks);
 
-        code[index] = replacement;
-    }
-}
-
-
-// ============================================================================
-// REMOVE ORIGINAL UNCOMMON RUSHDOWN
-// ============================================================================
-//
-// We preserve the original Rushdown model for compatibility, but:
-//
-// Uncommon -> Token
-// visible  -> hidden
-//
-// This removes it from normal card pools and the compendium.
-// ============================================================================
-
-[HarmonyPatch(typeof(Rushdown))]
-public static class RemoveOriginalRushdownPatch
-{
-    [HarmonyPatch(MethodType.Constructor)]
-    [HarmonyTranspiler]
-    private static IEnumerable<CodeInstruction> ConstructorTranspiler(
-        IEnumerable<CodeInstruction> instructions)
-    {
-        List<CodeInstruction> code =
-            instructions.ToList();
-
-
-        ConstructorInfo? watcherConstructor =
-            AccessTools.Constructor(
-                typeof(WatcherCardModel),
-                [
-                    typeof(int),
-                    typeof(CardType),
-                    typeof(CardRarity),
-                    typeof(TargetType),
-                    typeof(bool)
-                ]);
-
-        if (watcherConstructor == null)
-        {
-            throw new MissingMethodException(
-                "WatcherRebalance: Could not find WatcherCardModel constructor.");
-        }
-
-
-        for (int i = 0; i < code.Count; i++)
-        {
-            if (code[i].operand is not ConstructorInfo constructor ||
-                constructor != watcherConstructor)
-            {
-                continue;
-            }
-
-
-            // ----------------------------------------------------------------
-            // Original:
-            //
-            // CardRarity.Uncommon
-            //
-            // New:
-            //
-            // CardRarity.Token
-            // ----------------------------------------------------------------
-
-            ReplaceInt(
-                code,
-                i - 3,
-                (int)CardRarity.Token);
-
-
-            // ----------------------------------------------------------------
-            // Original:
-            //
-            // shouldShowInCardLibrary = true
-            //
-            // New:
-            //
-            // shouldShowInCardLibrary = false
-            // ----------------------------------------------------------------
-
-            ReplaceInt(
-                code,
-                i - 1,
-                0);
-
-
-            break;
-        }
-
-
-        return code;
-    }
-
-
-    // ========================================================================
-    // IL HELPER
-    // ========================================================================
-
-    private static void ReplaceInt(
-        List<CodeInstruction> code,
-        int index,
-        int value)
-    {
-        CodeInstruction original =
-            code[index];
-
-        var replacement =
-            new CodeInstruction(
-                OpCodes.Ldc_I4,
-                value);
-
-        replacement.labels.AddRange(
-            original.labels);
-
-        replacement.blocks.AddRange(
-            original.blocks);
-
-        code[index] = replacement;
+        code[index] =
+            replacement;
     }
 }

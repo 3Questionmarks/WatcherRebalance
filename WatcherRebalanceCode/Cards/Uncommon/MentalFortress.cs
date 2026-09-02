@@ -97,14 +97,14 @@ public static class MentalFortressPatch
             // 1 Energy
             //
             // New:
-            // 2 Energy
+            // 3 Energy
             if (code[i].operand is ConstructorInfo constructor &&
                 constructor == watcherCardConstructor)
             {
                 ReplaceInt(
                     code,
                     i - 5,
-                    2);
+                    3);
 
                 continue;
             }
@@ -166,7 +166,7 @@ public static class MentalFortressPatch
         MentalFortress __instance)
     {
         // Upgrade:
-        // 2 Energy -> 1 Energy
+        // 3 Energy -> 2 Energy
         MethodInfo? withCostUpgradeBy =
             typeof(ConstructedCardModel)
                 .GetMethods(

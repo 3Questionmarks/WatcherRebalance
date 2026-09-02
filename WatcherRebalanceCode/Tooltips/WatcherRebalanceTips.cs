@@ -75,4 +75,51 @@ public static class WatcherRebalanceTips
             description,
             null);
     }
+    
+    public static IHoverTip Divine()
+    {
+        var title =
+            new LocString(
+                "static_hover_tips",
+                "WATCHERREBALANCE_DIVINE.title");
+
+        var description =
+            new LocString(
+                "static_hover_tips",
+                "WATCHERREBALANCE_DIVINE.description");
+
+        return new HoverTip(
+            title,
+            description,
+            null);
+    }
+    
+    public static void AddDivineTip(
+        ConstructedCardModel card)
+    {
+        MethodInfo? withTips =
+            typeof(ConstructedCardModel)
+                .GetMethods(
+                    BindingFlags.Instance |
+                    BindingFlags.NonPublic)
+                .FirstOrDefault(m =>
+                    m.Name == "WithTips" &&
+                    m.GetParameters().Length == 1);
+
+        if (withTips == null)
+        {
+            throw new MissingMethodException(
+                "Could not find ConstructedCardModel.WithTips.");
+        }
+
+        Func<CardModel, IEnumerable<IHoverTip>> tooltipFactory =
+            _ =>
+            [
+                Divine()
+            ];
+
+        withTips.Invoke(
+            card,
+            [tooltipFactory]);
+    }
 }

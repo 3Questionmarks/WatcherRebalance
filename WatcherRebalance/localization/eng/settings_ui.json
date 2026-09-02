@@ -1,0 +1,89 @@
+﻿{
+  "WATCHERREBALANCE-CORE_CHANGES.title": "Core Changes",
+
+  "WATCHERREBALANCE-REBALANCED_STRENGTH_SCALING.title": "Rebalanced Strength Scaling",
+  "WATCHERREBALANCE-REBALANCED_STRENGTH_SCALING.hover.desc": "When enabled, Strength is not effected by Stance Damage Multipliers.",
+
+
+  "WATCHERREBALANCE-CALM.title": "Calm",
+
+  "WATCHERREBALANCE-CALM_ENERGY_ON_ENTER.title": "Energy on Enter",
+  "WATCHERREBALANCE-CALM_ENERGY_ON_ENTER.hover.desc": "Energy gained when entering Calm.",
+  "WATCHERREBALANCE-CALM_ENERGY_ON_ENTER.sliderFormat": "{0}",
+
+  "WATCHERREBALANCE-CALM_ENERGY_ON_EXIT.title": "Energy on Exit",
+  "WATCHERREBALANCE-CALM_ENERGY_ON_EXIT.hover.desc": "Energy gained when exiting Calm.",
+  "WATCHERREBALANCE-CALM_ENERGY_ON_EXIT.sliderFormat": "{0}",
+
+  "WATCHERREBALANCE-CALM_DAMAGE_MULTIPLIER.title": "Damage Dealt",
+  "WATCHERREBALANCE-CALM_DAMAGE_MULTIPLIER.hover.desc": "Damage multiplier applied to damage dealt while in Calm.",
+  "WATCHERREBALANCE-CALM_DAMAGE_MULTIPLIER.sliderFormat": "×{0:0.##}",
+
+  "WATCHERREBALANCE-CALM_DAMAGE_TAKEN_MULTIPLIER.title": "Damage Taken",
+  "WATCHERREBALANCE-CALM_DAMAGE_TAKEN_MULTIPLIER.hover.desc": "Damage multiplier applied to damage received while in Calm.",
+  "WATCHERREBALANCE-CALM_DAMAGE_TAKEN_MULTIPLIER.sliderFormat": "×{0:0.##}",
+
+  "WATCHERREBALANCE-WRATH.title": "Wrath",
+
+  "WATCHERREBALANCE-WRATH_ENERGY_ON_ENTER.title": "Energy on Enter",
+  "WATCHERREBALANCE-WRATH_ENERGY_ON_ENTER.hover.desc": "Energy gained when entering Wrath.",
+  "WATCHERREBALANCE-WRATH_ENERGY_ON_ENTER.sliderFormat": "{0}",
+
+  "WATCHERREBALANCE-WRATH_ENERGY_ON_EXIT.title": "Energy on Exit",
+  "WATCHERREBALANCE-WRATH_ENERGY_ON_EXIT.hover.desc": "Energy gained when exiting Wrath.",
+  "WATCHERREBALANCE-WRATH_ENERGY_ON_EXIT.sliderFormat": "{0}",
+
+  "WATCHERREBALANCE-WRATH_DAMAGE_MULTIPLIER.title": "Damage Dealt",
+  "WATCHERREBALANCE-WRATH_DAMAGE_MULTIPLIER.hover.desc": "Damage multiplier applied to attacks dealt while in Wrath.",
+  "WATCHERREBALANCE-WRATH_DAMAGE_MULTIPLIER.sliderFormat": "×{0:0.##}",
+
+  "WATCHERREBALANCE-WRATH_DAMAGE_TAKEN_MULTIPLIER.title": "Damage Taken",
+  "WATCHERREBALANCE-WRATH_DAMAGE_TAKEN_MULTIPLIER.hover.desc": "Damage multiplier applied to damage received while in Wrath.",
+  "WATCHERREBALANCE-WRATH_DAMAGE_TAKEN_MULTIPLIER.sliderFormat": "×{0:0.##}",
+
+
+  "WATCHERREBALANCE-DIVINITY.title": "Divinity",
+
+  "WATCHERREBALANCE-DIVINITY_ENERGY_ON_ENTER.title": "Energy on Enter",
+  "WATCHERREBALANCE-DIVINITY_ENERGY_ON_ENTER.hover.desc": "Energy gained when entering Divinity.",
+  "WATCHERREBALANCE-DIVINITY_ENERGY_ON_ENTER.sliderFormat": "{0}",
+
+  "WATCHERREBALANCE-DIVINITY_ENERGY_ON_EXIT.title": "Energy on Exit",
+  "WATCHERREBALANCE-DIVINITY_ENERGY_ON_EXIT.hover.desc": "Energy gained when exiting Divinity.",
+  "WATCHERREBALANCE-DIVINITY_ENERGY_ON_EXIT.sliderFormat": "{0}",
+
+  "WATCHERREBALANCE-DIVINITY_DAMAGE_MULTIPLIER.title": "Damage Dealt",
+  "WATCHERREBALANCE-DIVINITY_DAMAGE_MULTIPLIER.hover.desc": "Damage multiplier applied to attacks dealt while in Divinity.",
+  "WATCHERREBALANCE-DIVINITY_DAMAGE_MULTIPLIER.sliderFormat": "×{0:0.##}",
+
+  "WATCHERREBALANCE-DIVINITY_DAMAGE_TAKEN_MULTIPLIER.title": "Damage Taken",
+  "WATCHERREBALANCE-DIVINITY_DAMAGE_TAKEN_MULTIPLIER.hover.desc": "Damage multiplier applied to damage received while in Divinity.",
+  "WATCHERREBALANCE-DIVINITY_DAMAGE_TAKEN_MULTIPLIER.sliderFormat": "×{0:0.##}",
+  
+  
+  "WATCHERREBALANCE-REMOVED_CARDS.title": "Removed Cards",
+
+  "WATCHERREBALANCE-RESTORE_PRESSURE_POINTS.title": "Restore Pressure Points",
+  "WATCHERREBALANCE-RESTORE_PRESSURE_POINTS.hover.desc": "Restore Pressure Points to the Watcher's card pool.\n[gold]Requires a restart.[/gold]",
+
+  "WATCHERREBALANCE-RESTORE_RUSHDOWN.title": "Restore Rushdown",
+  "WATCHERREBALANCE-RESTORE_RUSHDOWN.hover.desc": "Restore the original Rushdown to the Watcher's card pool.\n[gold]Requires a restart.[/gold]",
+
+  "WATCHERREBALANCE-RESTORE_CONJURE_BLADE.title": "Restore Conjure Blade",
+  "WATCHERREBALANCE-RESTORE_CONJURE_BLADE.hover.desc": "Restore Conjure Blade and its Expunger token.\n[gold]Requires a restart.[/gold]",
+
+  "WATCHERREBALANCE-RESTORE_JUDGMENT.title": "Restore Judgment",
+  "WATCHERREBALANCE-RESTORE_JUDGMENT.hover.desc": "Restore Judgment to the Watcher's card pool.\n[gold]Requires a restart.[/gold]",
+
+  "WATCHERREBALANCE-RESTORE_SCRAWL.title": "Restore Scrawl",
+  "WATCHERREBALANCE-RESTORE_SCRAWL.hover.desc": "Restore Scrawl to the Watcher's card pool.\n[gold]Requires a restart.[/gold]",
+
+  "WATCHERREBALANCE-RESTORE_WISH.title": "Restore Wish",
+  "WATCHERREBALANCE-RESTORE_WISH.hover.desc": "Restore Wish to the Watcher's card pool.\n[gold]Requires a restart.[/gold]",
+  
+
+  "WATCHERREBALANCE-FUN_STUFF.title": "Fun Stuff",
+
+  "WATCHERREBALANCE-ENABLE_BLASPHEMY_EASTER_EGG.title": "Enable Blasphemy Easter Egg",
+  "WATCHERREBALANCE-ENABLE_BLASPHEMY_EASTER_EGG.hover.desc": "Enable a secret interaction when playing Blasphemy more than once in the same combat."
+}

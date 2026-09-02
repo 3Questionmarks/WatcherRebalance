@@ -145,9 +145,9 @@ public sealed class DevaPower
         // stance change represents entering Neutral.
         // =====================================================
 
-        await PlayerCmd.GainEnergy(
-            Amount,
-            player);
+        //await PlayerCmd.GainEnergy(
+        //    Amount,
+        //    player);
 
         Flash();
     }

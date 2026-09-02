@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿/*
+using System.Reflection;
 using BaseLib.Abstracts;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Models.Powers;
@@ -9,14 +10,14 @@ namespace WatcherRebalance.WatcherRebalanceCode.Cards.Common;
 [HarmonyPatch(typeof(SashWhip))]
 public static class SashWhipPatch
 {
-    /*
-     * SASH WHIP REBALANCE
-     *
-     * Deal 7 (10) damage.
-     *
-     * If the last card played this combat
-     * was an Attack, apply 2 Weak.
-     */
+    //
+    // SASH WHIP REBALANCE
+    //
+    // Deal 7 (10) damage.
+    //
+    // If the last card played this combat
+    // was an Attack, apply 2 Weak.
+    //
 
 
     [HarmonyPatch(MethodType.Constructor)]
@@ -224,3 +225,4 @@ public static class SashWhipPatch
         return constructedCard;
     }
 }
+*/

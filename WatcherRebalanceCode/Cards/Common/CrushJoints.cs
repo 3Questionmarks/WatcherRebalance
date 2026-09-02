@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿/*
+using System.Reflection;
 using BaseLib.Abstracts;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Models.Powers;
@@ -9,18 +10,18 @@ namespace WatcherRebalance.WatcherRebalanceCode.Cards.Common;
 [HarmonyPatch(typeof(CrushJoints))]
 public static class CrushJointsPatch
 {
-    /*
-     * CRUSH JOINTS REBALANCE
-     *
-     * Base:
-     * Deal 7 damage.
-     * If the last card played this combat was a Skill,
-     * apply 2 Vulnerable.
-     *
-     * Upgrade:
-     * Deal 10 damage.
-     * Vulnerable remains 2.
-     */
+    //
+    // CRUSH JOINTS REBALANCE
+    //
+    // Base:
+    // Deal 7 damage.
+    // If the last card played this combat was a Skill,
+    // apply 2 Vulnerable.
+    //
+    // Upgrade:
+    // Deal 10 damage.
+    // Vulnerable remains 2.
+    //
 
     [HarmonyPatch(MethodType.Constructor)]
     [HarmonyTranspiler]
@@ -249,3 +250,4 @@ public static class CrushJointsPatch
         return constructedCard;
     }
 }
+*/

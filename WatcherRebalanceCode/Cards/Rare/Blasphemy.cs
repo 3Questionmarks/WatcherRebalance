@@ -97,7 +97,8 @@ public static class BlasphemyConstructorPatch
         // BASE COST: 1 -> 2
         // =====================================================
 
-        bool changedCost = false;
+        bool changedCost =
+            false;
 
 
         for (int i = 0; i < code.Count; i++)
@@ -129,7 +130,9 @@ public static class BlasphemyConstructorPatch
                 replacement;
 
 
-            changedCost = true;
+            changedCost =
+                true;
+
             break;
         }
 
@@ -265,8 +268,14 @@ public static class BlasphemyOnPlayPatch
 
 
         // =====================================================
-        // FIRST BLASPHEMY
+        // NORMAL BLASPHEMY
         // =====================================================
+        //
+        // If the Easter egg is disabled, every Blasphemy uses
+        // the normal rebalanced behavior.
+        //
+        // If the Easter egg is enabled, this is also the
+        // behavior of the first Blasphemy played this combat.
         //
         // Gain 10 Mantra first.
         //
@@ -274,7 +283,8 @@ public static class BlasphemyOnPlayPatch
         // does not block this initial gain.
         // =====================================================
 
-        if (!creature.HasPower<BlasphemerPower>())
+        if (!Config.EnableBlasphemyEasterEgg ||
+            !creature.HasPower<BlasphemerPower>())
         {
             await CommonActions.ApplySelf<MantraPower>(
                 choiceContext,
@@ -292,8 +302,16 @@ public static class BlasphemyOnPlayPatch
 
 
         // =====================================================
-        // SECOND BLASPHEMY
+        // SECOND BLASPHEMY — EASTER EGG
         // =====================================================
+        //
+        // Only reachable when:
+        //
+        // 1. EnableBlasphemyEasterEgg is enabled.
+        //
+        // AND
+        //
+        // 2. The player already has BlasphemerPower.
         //
         // Don't start the punishment inside OnPlay.
         //
@@ -337,6 +355,21 @@ public static class BlasphemyAfterCardPlayedPatch
         }
 
 
+        // =====================================================
+        // CONFIG SAFETY
+        // =====================================================
+        //
+        // Normally the config is checked during OnPlay.
+        //
+        // Check it again here in case the player changes the
+        // setting between the card being marked and the
+        // AfterCardPlayed hook resolving.
+        // =====================================================
+
+        if (!Config.EnableBlasphemyEasterEgg)
+            return;
+
+
         await RunPunishment(
             blasphemy,
             __1);
@@ -347,8 +380,7 @@ public static class BlasphemyAfterCardPlayedPatch
     // PREPARE JUDGEMENT
     // =========================================================
     //
-    // Unlike the previous version, this method STOPS after the
-    // ten cards have been generated.
+    // This method stops after the ten cards have been generated.
     //
     // Nothing automatically plays them here.
     //
@@ -393,7 +425,8 @@ public static class BlasphemyAfterCardPlayedPatch
 
 
         // Short dramatic pause after the deck disappears.
-        await Task.Delay(100);
+        await Task.Delay(
+            100);
 
 
         // =====================================================
@@ -401,8 +434,6 @@ public static class BlasphemyAfterCardPlayedPatch
         // =====================================================
         //
         // Each one enters at a random position.
-        //
-        // Keep your 200ms stagger between cards.
         // =====================================================
 
         await WatcherCmd.GiveCard<Unworthy>(
@@ -411,7 +442,9 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-        await Task.Delay(100);
+
+        await Task.Delay(
+            100);
 
 
         await WatcherCmd.GiveCard<Traitor>(
@@ -420,7 +453,9 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-        await Task.Delay(100);
+
+        await Task.Delay(
+            100);
 
 
         await WatcherCmd.GiveCard<Repent>(
@@ -429,7 +464,9 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-        await Task.Delay(100);
+
+        await Task.Delay(
+            100);
 
 
         await WatcherCmd.GiveCard<Forsaken>(
@@ -438,7 +475,9 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-        await Task.Delay(100);
+
+        await Task.Delay(
+            100);
 
 
         await WatcherCmd.GiveCard<Heretic>(
@@ -447,7 +486,9 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-        await Task.Delay(100);
+
+        await Task.Delay(
+            100);
 
 
         await WatcherCmd.GiveCard<Apostate>(
@@ -456,7 +497,9 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-        await Task.Delay(100);
+
+        await Task.Delay(
+            100);
 
 
         await WatcherCmd.GiveCard<Profane>(
@@ -465,7 +508,9 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-        await Task.Delay(100);
+
+        await Task.Delay(
+            100);
 
 
         await WatcherCmd.GiveCard<Condemned>(
@@ -474,7 +519,9 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-        await Task.Delay(100);
+
+        await Task.Delay(
+            100);
 
 
         await WatcherCmd.GiveCard<Unforgiven>(
@@ -483,7 +530,9 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-        await Task.Delay(100);
+
+        await Task.Delay(
+            100);
 
 
         await WatcherCmd.GiveCard<Judgement>(

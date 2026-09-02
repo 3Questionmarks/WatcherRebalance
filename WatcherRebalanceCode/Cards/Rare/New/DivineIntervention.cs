@@ -12,6 +12,7 @@ using Watcher.Code.Core;
 using Watcher.Code.Extensions;
 using Watcher.Code.Stances;
 using WatcherRebalance.WatcherRebalanceCode.Cards.Token.New;
+using WatcherRebalance.WatcherRebalanceCode.Tooltips;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Rare.New;
 
@@ -57,8 +58,7 @@ public sealed class DivineIntervention
 
     protected override IEnumerable<IHoverTip> ExtraHoverTips =>
     [
-        WatcherHoverTipFactory
-            .FromStance<DivinityStance>(),
+        WatcherRebalanceTips.Divine(),
 
         HoverTipFactory.Static(
             StaticHoverTip.ReplayStatic),

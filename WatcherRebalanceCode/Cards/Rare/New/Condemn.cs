@@ -12,6 +12,7 @@ using Watcher.Code.Character;
 using Watcher.Code.Core;
 using Watcher.Code.Extensions;
 using Watcher.Code.Stances;
+using WatcherRebalance.WatcherRebalanceCode.Tooltips;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Rare.New;
 
@@ -53,8 +54,7 @@ public sealed class Condemn : WatcherRebalanceCard
 
     protected override IEnumerable<IHoverTip> ExtraHoverTips =>
     [
-        WatcherHoverTipFactory
-            .FromStance<DivinityStance>()
+        WatcherRebalanceTips.Divine()
     ];
 
 

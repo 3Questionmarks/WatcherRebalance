@@ -32,7 +32,7 @@ public sealed class CollectReplayPower :
         get
         {
             /*
-             * Show Miracle+ rather than base Miracle.
+             * Show Miracle.
              */
             
             CardModel collect =
@@ -49,7 +49,7 @@ public sealed class CollectReplayPower :
             return new IHoverTip[]
             {
                 HoverTipFactory.FromCard(miracle),
-                HoverTipFactory.FromCard<Miracle>(true),
+                HoverTipFactory.FromCard<Miracle>(false),
 
                 HoverTipFactory.Static(
                     StaticHoverTip.ReplayStatic)
@@ -90,12 +90,12 @@ public sealed class CollectReplayPower :
                 .ToHashSet();
 
 
-        // Create the normal Miracle+.
+        // Create the normal Miracle.
         await WatcherCmd.GiveCard<Miracle>(
             Owner.Player,
             PileType.Hand,
             CardPilePosition.Top,
-            upgraded: true,
+            upgraded: false,
             skipAnimation: true);
 
 

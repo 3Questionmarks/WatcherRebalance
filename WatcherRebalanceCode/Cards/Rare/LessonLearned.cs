@@ -1,18 +1,25 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
 using BaseLib.Abstracts;
+using BaseLib.Utils;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using Watcher.Code.Abstract;
 using Watcher.Code.Cards.Rare;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Rare;
 
 
-[HarmonyPatch(
-    typeof(LessonLearned),
-    MethodType.Constructor)]
+[HarmonyPatch]
 public static class LessonLearnedPatch
 {
+    // =========================================================
+    // CONSTRUCTOR
+    // =========================================================
+
+    [HarmonyPatch(
+        typeof(LessonLearned),
+        MethodType.Constructor)]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> ConstructorTranspiler(
         IEnumerable<CodeInstruction> instructions)
@@ -21,18 +28,45 @@ public static class LessonLearnedPatch
             instructions.ToList();
 
 
+        // ---------------------------------------------------------
+        // Find WatcherCardModel constructor.
+        // ---------------------------------------------------------
+
+        ConstructorInfo? watcherCardConstructor =
+            AccessTools.Constructor(
+                typeof(WatcherCardModel),
+                [
+                    typeof(int),
+                    typeof(CardType),
+                    typeof(CardRarity),
+                    typeof(TargetType),
+                    typeof(bool)
+                ]);
+
+
+        // ---------------------------------------------------------
+        // Find WithDamage(int, int).
+        // ---------------------------------------------------------
+
         MethodInfo? withDamage =
             typeof(ConstructedCardModel)
                 .GetMethods(
                     BindingFlags.Instance |
                     BindingFlags.NonPublic)
-                .FirstOrDefault(method =>
-                    method.Name == "WithDamage" &&
-                    method.GetParameters().Length == 2 &&
-                    method.GetParameters()[0].ParameterType ==
+                .FirstOrDefault(m =>
+                    m.Name == "WithDamage" &&
+                    m.GetParameters().Length == 2 &&
+                    m.GetParameters()[0].ParameterType ==
                     typeof(int) &&
-                    method.GetParameters()[1].ParameterType ==
+                    m.GetParameters()[1].ParameterType ==
                     typeof(int));
+
+
+        if (watcherCardConstructor == null)
+        {
+            throw new MissingMethodException(
+                "Could not find WatcherCardModel constructor.");
+        }
 
 
         if (withDamage == null)
@@ -42,12 +76,50 @@ public static class LessonLearnedPatch
         }
 
 
+        // =========================================================
+        // APPLY CHANGES
+        // =========================================================
+
         for (int i = 0; i < code.Count; i++)
         {
-            if (!code[i].Calls(withDamage))
+            // -----------------------------------------------------
+            // COST
+            //
+            // Original:
+            //
+            //     base(
+            //         2,
+            //         CardType.Attack,
+            //         CardRarity.Rare,
+            //         TargetType.AnyEnemy)
+            //
+            // New:
+            //
+            //     base(
+            //         3,
+            //         CardType.Attack,
+            //         CardRarity.Rare,
+            //         TargetType.AnyEnemy)
+            //
+            // This is the exact same method used by the working
+            // Mental Fortress patch.
+            // -----------------------------------------------------
+
+            if (code[i].operand is ConstructorInfo constructor &&
+                constructor == watcherCardConstructor)
+            {
+                ReplaceInt(
+                    code,
+                    i - 5,
+                    3);
+
                 continue;
+            }
 
 
+            // -----------------------------------------------------
+            // DAMAGE
+            //
             // Original:
             //
             //     WithDamage(10, 3)
@@ -56,13 +128,18 @@ public static class LessonLearnedPatch
             //
             //     WithDamage(10, 0)
             //
-            ReplaceInt(
-                code,
-                i - 1,
-                0);
+            // So Lesson Learned stays at 10 damage when upgraded.
+            // -----------------------------------------------------
 
+            if (code[i].Calls(withDamage))
+            {
+                ReplaceInt(
+                    code,
+                    i - 1,
+                    0);
 
-            break;
+                continue;
+            }
         }
 
 
@@ -73,17 +150,10 @@ public static class LessonLearnedPatch
     // =========================================================
     // UPGRADE-ONLY RETAIN
     // =========================================================
-    //
-    // Add:
-    //
-    //     WithKeyword(Retain, UpgradeType.Add)
-    //
-    // UpgradeType is protected inside ConstructedCardModel,
-    // so locate the helper reflectively and pass enum value 1.
-    //
-    // UpgradeType.Add == 1
-    // =========================================================
 
+    [HarmonyPatch(
+        typeof(LessonLearned),
+        MethodType.Constructor)]
     [HarmonyPostfix]
     private static void ConstructorPostfix(
         LessonLearned __instance)
@@ -93,14 +163,14 @@ public static class LessonLearnedPatch
                 .GetMethods(
                     BindingFlags.Instance |
                     BindingFlags.NonPublic)
-                .FirstOrDefault(method =>
+                .FirstOrDefault(m =>
                 {
-                    if (method.Name != "WithKeyword")
+                    if (m.Name != "WithKeyword")
                         return false;
 
 
                     ParameterInfo[] parameters =
-                        method.GetParameters();
+                        m.GetParameters();
 
 
                     return
@@ -123,6 +193,7 @@ public static class LessonLearnedPatch
                 .ParameterType;
 
 
+        // UpgradeType.Add == 1
         object addUpgrade =
             Enum.ToObject(
                 upgradeType,
@@ -138,44 +209,35 @@ public static class LessonLearnedPatch
     }
 
 
+    // =========================================================
+    // INTEGER REPLACEMENT
+    // =========================================================
+    //
+    // Deliberately copied from the working Mental Fortress
+    // implementation.
+    // =========================================================
+
     private static void ReplaceInt(
         List<CodeInstruction> code,
         int index,
         int value)
     {
-        OpCode opcode =
-            value switch
-            {
-                0 => OpCodes.Ldc_I4_0,
-                1 => OpCodes.Ldc_I4_1,
-                2 => OpCodes.Ldc_I4_2,
-                3 => OpCodes.Ldc_I4_3,
-                4 => OpCodes.Ldc_I4_4,
-                5 => OpCodes.Ldc_I4_5,
-                6 => OpCodes.Ldc_I4_6,
-                7 => OpCodes.Ldc_I4_7,
-                8 => OpCodes.Ldc_I4_8,
-                _ => OpCodes.Ldc_I4
-            };
+        CodeInstruction original =
+            code[index];
 
 
-        object? operand =
-            value is >= 0 and <= 8
-                ? null
-                : value;
-
-
-        CodeInstruction replacement =
-            new(
-                opcode,
-                operand);
+        var replacement =
+            new CodeInstruction(
+                OpCodes.Ldc_I4,
+                value);
 
 
         replacement.labels.AddRange(
-            code[index].labels);
+            original.labels);
+
 
         replacement.blocks.AddRange(
-            code[index].blocks);
+            original.blocks);
 
 
         code[index] =

@@ -16,6 +16,7 @@ using Watcher.Code.Extensions;
 using Watcher.Code.Powers;
 using Watcher.Code.Stances;
 using WatcherRebalance.WatcherRebalanceCode.Powers;
+using WatcherRebalance.WatcherRebalanceCode.Tooltips;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Token;
 
@@ -260,32 +261,8 @@ public static class MiraclePatch
         );
 
 
-        // -----------------------------------------------------
-        // Add Divinity stance tooltip.
-        // -----------------------------------------------------
-
-        MethodInfo? withStanceTip = typeof(WatcherCardModel)
-            .GetMethods(
-                BindingFlags.Instance |
-                BindingFlags.NonPublic
-            )
-            .FirstOrDefault(m =>
-                m.Name == "WithStanceTip" &&
-                m.IsGenericMethodDefinition &&
-                m.GetParameters().Length == 0
-            );
-
-        if (withStanceTip == null)
-        {
-            throw new Exception(
-                "WatcherRebalance: Could not find WatcherCardModel.WithStanceTip."
-            );
-        }
-
-        withStanceTip
-            .MakeGenericMethod(typeof(DivinityStance))
-            .Invoke(card, null);
-
+        // Add the shared Divine keyword-style tooltip.
+        WatcherRebalanceTips.AddDivineTip(card);
 
         return constructedCard;
     }

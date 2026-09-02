@@ -2,7 +2,9 @@
 using BaseLib.Extensions;
 using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
+using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.Entities.Multiplayer;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
@@ -22,11 +24,6 @@ public sealed class ManipulateReality()
     // ================================================================
     // SCRY
     // ================================================================
-    //
-    // Base:    3
-    // Upgrade: 5
-    //
-    // ================================================================
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
@@ -41,16 +38,6 @@ public sealed class ManipulateReality()
     // ================================================================
     // ON PLAY
     // ================================================================
-    //
-    // The card itself does NOT perform anybody's Scry.
-    //
-    // Instead, every living player receives their own
-    // ManipulateRealityPower.
-    //
-    // Each copy of that power immediately resolves for its own
-    // player and then removes itself.
-    //
-    // ================================================================
 
     protected override async Task OnPlay(
         PlayerChoiceContext choiceContext,
@@ -60,8 +47,20 @@ public sealed class ManipulateReality()
             return;
 
 
+        ulong? localNetId =
+            LocalContext.NetId;
+
+
+        if (!localNetId.HasValue)
+            return;
+
+
         int scryAmount =
             DynamicVars.Scry().IntValue;
+
+
+        Player cardOwner =
+            Owner;
 
 
         Player[] players =
@@ -72,51 +71,150 @@ public sealed class ManipulateReality()
 
 
         // ============================================================
-        // APPLY ALL PLAYER POWERS AT ONCE
+        // 1. APPLY EVERY PLAYER'S MARKER POWER
         // ============================================================
         //
-        // Do NOT await them one at a time.
-        //
-        // Each player's power application can therefore proceed
-        // independently through the multiplayer choice context.
-        //
+        // No Scry happens during PowerCmd.Apply anymore.
         // ============================================================
 
-        Task[] applications =
-            players
-                .Select(player =>
-                    ApplyToPlayer(
-                        choiceContext,
-                        player,
-                        scryAmount))
-                .ToArray();
+        List<ManipulateRealityPower> powers =
+            new();
 
 
-        await Task.WhenAll(applications);
-    }
+        foreach (Player player in players)
+        {
+            ManipulateRealityPower? power =
+                await PowerCmd.Apply<ManipulateRealityPower>(
+                    choiceContext,
+                    player.Creature,
+                    scryAmount,
+                    cardOwner.Creature,
+                    this);
 
 
-    // ================================================================
-    // APPLY TO ONE PLAYER
-    // ================================================================
+            if (power != null)
+            {
+                powers.Add(power);
+            }
+        }
 
-    private async Task ApplyToPlayer(
-        PlayerChoiceContext choiceContext,
-        Player player,
-        int scryAmount)
-    {
-        await PowerCmd.Apply<ManipulateRealityPower>(
-            choiceContext,
-            player.Creature,
 
-            // The power amount stores the Scry amount.
-            scryAmount,
+        // ============================================================
+        // 2. FIND THE CARD OWNER'S POWER
+        // ============================================================
 
-            // The Watcher remains the source/applier of the effect.
-            Owner.Creature,
+        ManipulateRealityPower? ownerPower =
+            powers.FirstOrDefault(power =>
+                power.Owner.Player == cardOwner);
 
-            // Card source.
-            this);
+
+        // ============================================================
+        // 3. START EVERY OTHER PLAYER
+        // ============================================================
+        //
+        // Each OTHER player receives their own HookPlayerChoiceContext.
+        //
+        // We only wait until the effect:
+        //
+        //     A) completes immediately
+        //
+        // or
+        //
+        //     B) reaches Scry and pauses.
+        //
+        // We deliberately DO NOT WaitForCompletion afterward.
+        //
+        // Once a player choice creates a GenericHookGameAction, that
+        // effect is now independently synchronized through that
+        // player's action queue.
+        // ============================================================
+
+        foreach (ManipulateRealityPower power in powers)
+        {
+            Player? affectedPlayer =
+                power.Owner.Player;
+
+
+            if (affectedPlayer == null)
+                continue;
+
+
+            // The card owner's effect MUST stay on the original
+            // PlayCardAction.
+            if (affectedPlayer == cardOwner)
+                continue;
+
+
+            var remoteContext =
+                new HookPlayerChoiceContext(
+                    power,
+                    affectedPlayer,
+                    localNetId.Value,
+                    GameActionType.Combat);
+
+
+            Task remoteTask =
+                power.Resolve(
+                    remoteContext);
+
+
+            await remoteContext
+                .AssignTaskAndWaitForPauseOrCompletion(
+                    remoteTask);
+
+
+            // IMPORTANT:
+            //
+            // Do NOT:
+            //
+            //     await remoteContext.WaitForCompletion();
+            //
+            // The whole point is that this player's resulting
+            // GenericHookGameAction should now live independently.
+        }
+
+
+        // ============================================================
+        // 4. RESOLVE THE CARD OWNER
+        // ============================================================
+        //
+        // The owner uses the ORIGINAL card choice context.
+        //
+        // When Scry requests a player choice, the normal PlayCardAction
+        // pauses.
+        //
+        // That pause frees ActionExecutor to start all the remote
+        // GenericHookGameActions we queued above.
+        //
+        // Result:
+        //
+        //     Owner PlayCardAction -> GatheringPlayerChoice
+        //     Player B HookAction  -> GatheringPlayerChoice
+        //     Player C HookAction  -> GatheringPlayerChoice
+        //
+        // simultaneously.
+        // ============================================================
+
+        if (ownerPower != null)
+        {
+            await ownerPower.Resolve(
+                choiceContext);
+        }
+
+
+        // ============================================================
+        // DONE
+        // ============================================================
+        //
+        // We intentionally do NOT wait for remote players here.
+        //
+        // Their effects now belong to their own synchronized hook
+        // actions.
+        //
+        // If the card owner had no cards available to Scry, their
+        // Resolve() completes immediately and this PlayCardAction ends,
+        // allowing the already-enqueued remote hook actions to begin.
+        // ============================================================
     }
 
 
