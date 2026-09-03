@@ -3,7 +3,7 @@
   "name": "WatcherRebalance",
   "author": "???",
   "description": "An addon for the Watcher mod by lamali that aims to rebalance and incorporate the Watcher more naturally into STS2.",
-  "version": "v1.1.0",
+  "version": "v1.2.1",
   "min_game_version": "0.107.0",
   "has_pck": true,
   "has_dll": true,

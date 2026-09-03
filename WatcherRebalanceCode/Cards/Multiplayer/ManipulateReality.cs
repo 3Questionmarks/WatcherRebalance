@@ -1,4 +1,6 @@
-﻿using BaseLib.Cards.Variables;
+﻿/*Disabling Till I fix
+
+using BaseLib.Cards.Variables;
 using BaseLib.Extensions;
 using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
@@ -222,3 +224,4 @@ public sealed class ManipulateReality()
     {
     }
 }
+*/

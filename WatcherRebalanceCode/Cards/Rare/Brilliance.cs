@@ -140,7 +140,7 @@ public static class BrilliancePatch
             ReplaceInt(
                 code,
                 i - 5,
-                2);
+                3);
 
 
             return code;
