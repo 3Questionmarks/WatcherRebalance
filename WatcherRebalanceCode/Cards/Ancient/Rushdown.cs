@@ -68,7 +68,7 @@ public static class RushdownPatch
         //
         // New:
         //
-        // 1 Energy
+        // 0 Energy
         // --------------------------------------------------------------------
 
         ConstructorInfo? watcherConstructor =
@@ -198,7 +198,7 @@ public static class RushdownPatch
             // ----------------------------------------------------------------
             // COST
             //
-            // 2 -> 1
+            // 2 -> 0
             // ----------------------------------------------------------------
 
             if (code[i].operand is ConstructorInfo constructor &&
@@ -207,7 +207,7 @@ public static class RushdownPatch
                 ReplaceInt(
                     code,
                     i - 5,
-                    1);
+                    0);
 
                 continue;
             }

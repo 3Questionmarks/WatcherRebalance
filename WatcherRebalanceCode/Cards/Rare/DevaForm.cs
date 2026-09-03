@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Reflection.Emit;
 using BaseLib.Abstracts;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -15,6 +16,140 @@ namespace WatcherRebalance.WatcherRebalanceCode.Cards.Rare;
 
 
 // =============================================================
+// DEVA FORM - REMOVE ORIGINAL ENERGY VARIABLE / TOOLTIP
+// =============================================================
+//
+// Original Deva Form:
+//
+//     WithEnergy(1);
+//
+// Actual signature:
+//
+//     WithEnergy(int baseVal, int upgrade = 0)
+//
+// The compiler therefore emits both arguments:
+//
+//     WithEnergy(1, 0)
+//
+// Rather than deleting IL instructions, replace the call with a
+// helper having the exact same stack signature.
+//
+// This is the same style of method-call replacement we've used
+// successfully in other card patches.
+// =============================================================
+
+[HarmonyPatch(
+    typeof(DevaForm),
+    MethodType.Constructor)]
+public static class DevaFormRemoveEnergyTooltipPatch
+{
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> Transpiler(
+        IEnumerable<CodeInstruction> instructions)
+    {
+        List<CodeInstruction> code =
+            instructions.ToList();
+
+
+        MethodInfo? withEnergy =
+            typeof(ConstructedCardModel)
+                .GetMethods(
+                    BindingFlags.Instance |
+                    BindingFlags.NonPublic)
+                .FirstOrDefault(method =>
+                    method.Name == "WithEnergy" &&
+                    method.GetParameters().Length == 2 &&
+                    method.GetParameters()[0].ParameterType ==
+                        typeof(int) &&
+                    method.GetParameters()[1].ParameterType ==
+                        typeof(int));
+
+
+        MethodInfo? replacement =
+            AccessTools.Method(
+                typeof(DevaFormRemoveEnergyTooltipPatch),
+                nameof(RemoveEnergy));
+
+
+        if (withEnergy == null)
+        {
+            throw new MissingMethodException(
+                "WatcherRebalance: Could not find " +
+                "ConstructedCardModel.WithEnergy(int, int).");
+        }
+
+
+        if (replacement == null)
+        {
+            throw new MissingMethodException(
+                "WatcherRebalance: Could not find " +
+                "DevaFormRemoveEnergyTooltipPatch.RemoveEnergy.");
+        }
+
+
+        bool patched =
+            false;
+
+
+        for (int i = 0; i < code.Count; i++)
+        {
+            if (!code[i].Calls(withEnergy))
+                continue;
+
+
+            CodeInstruction original =
+                code[i];
+
+
+            CodeInstruction newInstruction =
+                new(
+                    OpCodes.Call,
+                    replacement);
+
+
+            newInstruction.labels.AddRange(
+                original.labels);
+
+            newInstruction.blocks.AddRange(
+                original.blocks);
+
+
+            code[i] =
+                newInstruction;
+
+
+            patched =
+                true;
+
+            break;
+        }
+
+
+        if (!patched)
+        {
+            throw new Exception(
+                "WatcherRebalance: Failed to remove " +
+                "Deva Form's Energy variable.");
+        }
+
+
+        return code;
+    }
+
+
+    private static ConstructedCardModel RemoveEnergy(
+        ConstructedCardModel card,
+        int ignoredBase,
+        int ignoredUpgrade)
+    {
+        // Consume the original WithEnergy arguments but do
+        // not create an EnergyVar or Energy tooltip.
+        return card;
+    }
+}
+
+
+// =============================================================
 // DEVA FORM - CARD TOOLTIPS
 // =============================================================
 //
@@ -27,7 +162,7 @@ namespace WatcherRebalance.WatcherRebalanceCode.Cards.Rare;
 // - Strength
 // - Intangible
 //
-// This is deliberately separate from the OnPlay Harmony patch.
+// Energy is deliberately omitted.
 // =============================================================
 
 [HarmonyPatch(
@@ -54,7 +189,8 @@ public static class DevaFormTooltipPatch
         if (withTips == null)
         {
             throw new MissingMethodException(
-                "WatcherRebalance: Could not find ConstructedCardModel.WithTips.");
+                "WatcherRebalance: Could not find " +
+                "ConstructedCardModel.WithTips.");
         }
 
 
@@ -86,7 +222,7 @@ public static class DevaFormTooltipPatch
 //
 // Completely replaces the original DevaPower effect.
 //
-// Playing Deva Form now applies our custom DevaFormPower.
+// Playing Deva Form now applies our custom DevaPower.
 // =============================================================
 
 [HarmonyPatch(

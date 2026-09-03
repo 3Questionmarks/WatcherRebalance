@@ -46,7 +46,7 @@ public static class SandsOfTimePatch
             ReplaceInt(
                 code,
                 i - 1,
-                10);
+                6);
 
             break;
         }

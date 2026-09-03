@@ -8,6 +8,7 @@ using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.ValueProps;
+using Watcher.Code.Abstract;
 using Watcher.Code.Cards.Rare;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Rare;
@@ -28,7 +29,7 @@ public static class BrilliancePatch
      *
      * Rebalanced:
      *
-     * 1 Energy
+     * 2 Energy
      * Deal 1 damage 2(3) times.
      * Each hit deals additional damage equal to
      * Mantra gained this combat.
@@ -47,7 +48,16 @@ public static class BrilliancePatch
 
 
     // =========================================================
-    // CONSTRUCTOR
+    // COST
+    // =========================================================
+    //
+    // Original:
+    //     1 Energy
+    //
+    // Rebalanced:
+    //     2 Energy
+    //
+    // The upgrade does not change the cost.
     // =========================================================
 
     [HarmonyPatch(
@@ -55,7 +65,103 @@ public static class BrilliancePatch
         MethodType.Constructor)]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction>
-        ConstructorTranspiler(
+        CostTranspiler(
+            IEnumerable<CodeInstruction> instructions)
+    {
+        List<CodeInstruction> code =
+            instructions.ToList();
+
+
+        // -----------------------------------------------------
+        // Find WatcherCardModel's constructor:
+        //
+        // WatcherCardModel(
+        //     int cost,
+        //     CardType type,
+        //     CardRarity rarity,
+        //     TargetType target,
+        //     bool shouldShowInCardLibrary = true)
+        //
+        // Brilliance originally passes 1 as its cost.
+        // -----------------------------------------------------
+
+        ConstructorInfo? watcherConstructor =
+            typeof(WatcherCardModel)
+                .GetConstructors(
+                    BindingFlags.Instance |
+                    BindingFlags.Public |
+                    BindingFlags.NonPublic)
+                .FirstOrDefault(c =>
+                {
+                    ParameterInfo[] parameters =
+                        c.GetParameters();
+
+                    return
+                        parameters.Length == 5 &&
+                        parameters[0].ParameterType == typeof(int) &&
+                        parameters[1].ParameterType == typeof(CardType) &&
+                        parameters[2].ParameterType == typeof(CardRarity) &&
+                        parameters[3].ParameterType == typeof(TargetType) &&
+                        parameters[4].ParameterType == typeof(bool);
+                });
+
+
+        if (watcherConstructor == null)
+        {
+            throw new MissingMethodException(
+                "WatcherRebalance: Could not find " +
+                "WatcherCardModel(int, CardType, CardRarity, TargetType, bool).");
+        }
+
+
+        for (int i = 0; i < code.Count; i++)
+        {
+            if (code[i].operand is not ConstructorInfo constructor ||
+                constructor != watcherConstructor)
+            {
+                continue;
+            }
+
+
+            // Immediately before the constructor call:
+            //
+            // i - 5 = cost
+            // i - 4 = CardType
+            // i - 3 = CardRarity
+            // i - 2 = TargetType
+            // i - 1 = shouldShowInCardLibrary
+            //
+            // Change:
+            //     cost 1
+            //
+            // to:
+            //     cost 2
+
+            ReplaceInt(
+                code,
+                i - 5,
+                2);
+
+
+            return code;
+        }
+
+
+        throw new Exception(
+            "WatcherRebalance: Failed to patch Brilliance's Energy cost.");
+    }
+
+
+    // =========================================================
+    // CALCULATED DAMAGE
+    // =========================================================
+
+    [HarmonyPatch(
+        typeof(Brilliance),
+        MethodType.Constructor)]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction>
+        DamageTranspiler(
             IEnumerable<CodeInstruction> instructions)
     {
         List<CodeInstruction> code =
@@ -372,5 +478,45 @@ public static class BrilliancePatch
                 hitCount)
             .Execute(
                 choiceContext);
+    }
+
+
+    // =========================================================
+    // IL HELPERS
+    // =========================================================
+
+    private static void ReplaceInt(
+        List<CodeInstruction> code,
+        int index,
+        int value)
+    {
+        if (index < 0 ||
+            index >= code.Count)
+        {
+            throw new Exception(
+                "WatcherRebalance: Invalid IL index while " +
+                "patching Brilliance.");
+        }
+
+
+        CodeInstruction original =
+            code[index];
+
+
+        CodeInstruction replacement =
+            new(
+                OpCodes.Ldc_I4,
+                value);
+
+
+        replacement.labels.AddRange(
+            original.labels);
+
+        replacement.blocks.AddRange(
+            original.blocks);
+
+
+        code[index] =
+            replacement;
     }
 }
