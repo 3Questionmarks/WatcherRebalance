@@ -222,18 +222,12 @@ public static class FollowUpPatch
         PlayerChoiceContext ctx,
         CardPlay cardPlay)
     {
-        await CommonActions.CardAttack(
-                card,
-                cardPlay
-            )
-            .WithHitFx("vfx/vfx_attack_slash")
+        await CommonActions
+            .CardAttack(card, cardPlay)
+            .WithHitFx(
+                "vfx/vfx_attack_blunt",
+                tmpSfx: "blunt_attack.mp3")
             .Execute(ctx);
-
-        /*
-         * We cannot directly access Follow-Up's private
-         * WasLastCardPlayedAttack property, so reproduce
-         * the same history check here.
-         */
 
         var lastCardEntry =
             MegaCrit.Sts2.Core.Combat.CombatManager

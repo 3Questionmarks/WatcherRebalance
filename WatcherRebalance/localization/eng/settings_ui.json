@@ -80,6 +80,12 @@
 
   "WATCHERREBALANCE-RESTORE_WISH.title": "Restore Wish",
   "WATCHERREBALANCE-RESTORE_WISH.hover.desc": "Restore Wish to the Watcher's card pool.\n[gold]Requires a restart.[/gold]",
+
+
+  "WATCHERREBALANCE-MULTIPLAYER_CARDS.title": "Multiplayer Cards",
+  
+  "WATCHERREBALANCE-ENABLE_MANIPULATE_REALITY.title": "Enable Manipulate Reality",
+  "WATCHERREBALANCE-ENABLE_MANIPULATE_REALITY.hover.desc": "Allows Manipulate Reality to appear in multiplayer runs. (Mainly for if the card still causes issues)\n[gold]Requires a restart.[/gold].",
   
 
   "WATCHERREBALANCE-FUN_STUFF.title": "Fun Stuff",

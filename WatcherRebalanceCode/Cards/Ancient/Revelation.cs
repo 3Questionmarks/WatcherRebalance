@@ -36,6 +36,10 @@ namespace WatcherRebalance.WatcherRebalanceCode.Cards.Ancient;
 // - Removes Exhaust completely
 // - Removes the old -1 Energy upgrade
 // - Adds 3(5) Mantra
+//
+// FX:
+// - vfx_starry_impact
+// - blunt_attack.mp3
 // ============================================================================
 
 [HarmonyPatch(typeof(AncientCard2))]
@@ -88,9 +92,6 @@ public static class RevelationPatch
         // Original:
         // WithDamage(12)
         //
-        // Compiles as:
-        // WithDamage(12, 0)
-        //
         // New:
         // WithDamage(15, 5)
         // --------------------------------------------------------------------
@@ -113,15 +114,7 @@ public static class RevelationPatch
 
 
         // --------------------------------------------------------------------
-        // Original:
-        //
-        // WithKeywords(CardKeyword.Exhaust)
-        //
-        // We replace the call entirely.
-        //
-        // Our helper consumes the original CardKeyword[] but does NOT add
-        // Exhaust. It also adds the new Mantra variable while the card is
-        // still being constructed.
+        // Remove Exhaust and add Mantra.
         // --------------------------------------------------------------------
 
         MethodInfo? withKeywords =
@@ -153,13 +146,7 @@ public static class RevelationPatch
 
 
         // --------------------------------------------------------------------
-        // Original stance tooltip:
-        //
-        // WithStanceTip<DivinityStance>()
-        //
-        // Replace with:
-        //
-        // WithStanceTip<WrathStance>()
+        // Divinity tooltip -> Wrath tooltip.
         // --------------------------------------------------------------------
 
         MethodInfo? stanceTipDefinition =
@@ -200,15 +187,7 @@ public static class RevelationPatch
 
 
         // --------------------------------------------------------------------
-        // Original upgrade:
-        //
-        // WithCostUpgradeBy(-1)
-        //
-        // New:
-        //
-        // WithCostUpgradeBy(0)
-        //
-        // Therefore Revelation stays at 1 Energy when upgraded.
+        // Remove original -1 cost upgrade.
         // --------------------------------------------------------------------
 
         MethodInfo? withCostUpgrade =
@@ -242,15 +221,6 @@ public static class RevelationPatch
             if (code[i].operand is ConstructorInfo constructor &&
                 constructor == watcherConstructor)
             {
-                // Constructor stack:
-                //
-                // this
-                // cost
-                // type
-                // rarity
-                // target
-                // shouldShowInCardLibrary
-
                 ReplaceInt(
                     code,
                     i - 5,
@@ -303,7 +273,8 @@ public static class RevelationPatch
                 replacement.blocks.AddRange(
                     original.blocks);
 
-                code[i] = replacement;
+                code[i] =
+                    replacement;
 
                 continue;
             }
@@ -329,7 +300,8 @@ public static class RevelationPatch
                 replacement.blocks.AddRange(
                     original.blocks);
 
-                code[i] = replacement;
+                code[i] =
+                    replacement;
 
                 continue;
             }
@@ -357,21 +329,6 @@ public static class RevelationPatch
 
     // ========================================================================
     // REMOVE EXHAUST + ADD MANTRA
-    // ========================================================================
-    //
-    // This replaces:
-    //
-    // WithKeywords(CardKeyword.Exhaust)
-    //
-    // We deliberately ignore the original keyword array, which means
-    // Exhaust is never registered in the first place.
-    //
-    // While the card is still being constructed, we then add:
-    //
-    // Mantra 3
-    // Upgrade +2
-    //
-    // giving 3(5) Mantra.
     // ========================================================================
 
     private static ConstructedCardModel ReplaceKeywordsWithMantra(
@@ -417,9 +374,9 @@ public static class RevelationPatch
                 .Invoke(
                     watcherCard,
                     [
-                        3,      // Base Mantra
-                        2,      // Upgrade: +2 -> 5
-                        true    // Show Mantra tooltip
+                        3,
+                        2,
+                        true
                     ]);
 
 
@@ -490,15 +447,15 @@ public static class RevelationPatch
     [HarmonyPrefix]
     private static bool OnPlayPrefix(
         AncientCard2 __instance,
-        PlayerChoiceContext ctx,
-        CardPlay cardPlay,
+        PlayerChoiceContext __0,
+        CardPlay __1,
         ref Task __result)
     {
         __result =
             NewOnPlay(
                 __instance,
-                ctx,
-                cardPlay);
+                __0,
+                __1);
 
         return false;
     }
@@ -506,11 +463,13 @@ public static class RevelationPatch
 
     private static async Task NewOnPlay(
         AncientCard2 card,
-        PlayerChoiceContext ctx,
+        PlayerChoiceContext choiceContext,
         CardPlay cardPlay)
     {
         // --------------------------------------------------------------------
         // Deal 15(20) damage.
+        //
+        // Starry impact + blunt attack sound.
         // --------------------------------------------------------------------
 
         await CommonActions
@@ -518,8 +477,10 @@ public static class RevelationPatch
                 card,
                 cardPlay)
             .WithHitFx(
-                "vfx/vfx_attack_slash")
-            .Execute(ctx);
+                "vfx/vfx_starry_impact",
+                tmpSfx: "blunt_attack.mp3")
+            .Execute(
+                choiceContext);
 
 
         // --------------------------------------------------------------------
@@ -527,7 +488,7 @@ public static class RevelationPatch
         // --------------------------------------------------------------------
 
         await StanceCmd.EnterWrath(
-            ctx,
+            choiceContext,
             card.Owner,
             cardPlay.Card);
 
@@ -537,7 +498,7 @@ public static class RevelationPatch
         // --------------------------------------------------------------------
 
         await CommonActions.ApplySelf<MantraPower>(
-            ctx,
+            choiceContext,
             card);
     }
 
@@ -565,6 +526,7 @@ public static class RevelationPatch
         replacement.blocks.AddRange(
             original.blocks);
 
-        code[index] = replacement;
+        code[index] =
+            replacement;
     }
 }

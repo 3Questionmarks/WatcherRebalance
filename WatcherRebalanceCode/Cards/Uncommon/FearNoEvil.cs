@@ -53,13 +53,13 @@ public static class FearNoEvilPatch
 
         for (int i = 0; i < code.Count; i++)
         {
-            if (code[i].operand is ConstructorInfo constructor &&
-                constructor == watcherCardConstructor)
-            {
-                // Cost 1 -> 2
-                ReplaceInt(code, i - 5, 2);
-                continue;
-            }
+            //if (code[i].operand is ConstructorInfo constructor &&
+            //    constructor == watcherCardConstructor)
+            //{
+            //    // Cost 1 -> 2
+            //    ReplaceInt(code, i - 5, 2);
+            //    continue;
+            //}
 
             if (code[i].Calls(withDamage))
             {
@@ -137,6 +137,9 @@ public static class FearNoEvilPatch
         // Always deal damage after the stance change.
         await CommonActions
             .CardAttack(card, cardPlay)
+            .WithHitFx(
+                "vfx/vfx_attack_blunt",
+                tmpSfx: "blunt_attack.mp3")
             .Execute(ctx);
     }
 

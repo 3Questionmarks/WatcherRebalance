@@ -1,6 +1,5 @@
-﻿/*Disabling Till I fix
-
-using BaseLib.Cards.Variables;
+﻿using BaseLib.Cards.Variables;
+using BaseLib.Commands;
 using BaseLib.Extensions;
 using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
@@ -10,8 +9,8 @@ using MegaCrit.Sts2.Core.Entities.Multiplayer;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
+using MegaCrit.Sts2.Core.Models;
 using Watcher.Code.Character;
-using WatcherRebalance.WatcherRebalanceCode.Powers;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Multiplayer;
 
@@ -20,16 +19,36 @@ public sealed class ManipulateReality()
     : WatcherRebalanceCard(
         1,
         CardType.Skill,
-        CardRarity.Uncommon,
-        TargetType.None)
+
+        // Disabled Manipulate Reality becomes a Token card.
+        //
+        // This prevents it from appearing as a normal Uncommon Watcher reward
+        Config.EnableManipulateReality
+            ? CardRarity.Uncommon
+            : CardRarity.Token,
+
+        TargetType.None,
+
+        // Also hide it from the card library while disabled.
+        Config.EnableManipulateReality)
 {
     // ================================================================
     // SCRY
     // ================================================================
+    //
+    // The upgrade no longer increases Scry.
+    //
+    // Base:
+    //     Scry 3.
+    //
+    // Upgraded:
+    //     Scry 3.
+    //     The card drawn by each player gains Retain for this turn.
+    // ================================================================
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
-        new ScryVar(3).WithUpgrade(2)
+        new ScryVar(3)
     ];
 
 
@@ -61,6 +80,12 @@ public sealed class ManipulateReality()
             DynamicVars.Scry().IntValue;
 
 
+        // The upgrade now gives temporary Retain to the card
+        // drawn by Manipulate Reality.
+        bool retainDrawnCard =
+            IsUpgraded;
+
+
         Player cardOwner =
             Owner;
 
@@ -73,91 +98,48 @@ public sealed class ManipulateReality()
 
 
         // ============================================================
-        // 1. APPLY EVERY PLAYER'S MARKER POWER
+        // 1. START EVERY OTHER PLAYER
         // ============================================================
         //
-        // No Scry happens during PowerCmd.Apply anymore.
-        // ============================================================
-
-        List<ManipulateRealityPower> powers =
-            new();
-
-
-        foreach (Player player in players)
-        {
-            ManipulateRealityPower? power =
-                await PowerCmd.Apply<ManipulateRealityPower>(
-                    choiceContext,
-                    player.Creature,
-                    scryAmount,
-                    cardOwner.Creature,
-                    this);
-
-
-            if (power != null)
-            {
-                powers.Add(power);
-            }
-        }
-
-
-        // ============================================================
-        // 2. FIND THE CARD OWNER'S POWER
-        // ============================================================
-
-        ManipulateRealityPower? ownerPower =
-            powers.FirstOrDefault(power =>
-                power.Owner.Player == cardOwner);
-
-
-        // ============================================================
-        // 3. START EVERY OTHER PLAYER
-        // ============================================================
+        // Each other player receives their own HookPlayerChoiceContext.
         //
-        // Each OTHER player receives their own HookPlayerChoiceContext.
+        // If Scry requires a choice, HookPlayerChoiceContext creates a
+        // GenericHookGameAction belonging to that player.
         //
-        // We only wait until the effect:
+        // AssignTaskAndWaitForPauseOrCompletion waits until:
         //
-        //     A) completes immediately
+        //     A) the effect completes immediately
         //
         // or
         //
-        //     B) reaches Scry and pauses.
+        //     B) Scry pauses for a player choice and the remainder of
+        //        the task is transferred to GenericHookGameAction.
         //
-        // We deliberately DO NOT WaitForCompletion afterward.
-        //
-        // Once a player choice creates a GenericHookGameAction, that
-        // effect is now independently synchronized through that
-        // player's action queue.
+        // We deliberately do NOT call WaitForCompletion().
         // ============================================================
 
-        foreach (ManipulateRealityPower power in powers)
+        foreach (Player player in players)
         {
-            Player? affectedPlayer =
-                power.Owner.Player;
-
-
-            if (affectedPlayer == null)
-                continue;
-
-
-            // The card owner's effect MUST stay on the original
-            // PlayCardAction.
-            if (affectedPlayer == cardOwner)
+            // The card owner's effect stays on the original
+            // PlayCardAction and PlayerChoiceContext.
+            if (player == cardOwner)
                 continue;
 
 
             var remoteContext =
                 new HookPlayerChoiceContext(
-                    power,
-                    affectedPlayer,
+                    this,
+                    player,
                     localNetId.Value,
                     GameActionType.Combat);
 
 
             Task remoteTask =
-                power.Resolve(
-                    remoteContext);
+                ResolveForPlayer(
+                    remoteContext,
+                    player,
+                    scryAmount,
+                    retainDrawnCard);
 
 
             await remoteContext
@@ -171,57 +153,97 @@ public sealed class ManipulateReality()
             //
             //     await remoteContext.WaitForCompletion();
             //
-            // The whole point is that this player's resulting
-            // GenericHookGameAction should now live independently.
+            // If Scry required a choice, GenericHookGameAction now
+            // owns the remainder of remoteTask.
         }
 
 
         // ============================================================
-        // 4. RESOLVE THE CARD OWNER
+        // 2. RESOLVE THE CARD OWNER
         // ============================================================
         //
-        // The owner uses the ORIGINAL card choice context.
-        //
-        // When Scry requests a player choice, the normal PlayCardAction
-        // pauses.
-        //
-        // That pause frees ActionExecutor to start all the remote
-        // GenericHookGameActions we queued above.
-        //
-        // Result:
-        //
-        //     Owner PlayCardAction -> GatheringPlayerChoice
-        //     Player B HookAction  -> GatheringPlayerChoice
-        //     Player C HookAction  -> GatheringPlayerChoice
-        //
-        // simultaneously.
+        // The owner continues using the original PlayCardAction's
+        // PlayerChoiceContext.
         // ============================================================
 
-        if (ownerPower != null)
-        {
-            await ownerPower.Resolve(
-                choiceContext);
-        }
-
-
-        // ============================================================
-        // DONE
-        // ============================================================
-        //
-        // We intentionally do NOT wait for remote players here.
-        //
-        // Their effects now belong to their own synchronized hook
-        // actions.
-        //
-        // If the card owner had no cards available to Scry, their
-        // Resolve() completes immediately and this PlayCardAction ends,
-        // allowing the already-enqueued remote hook actions to begin.
-        // ============================================================
+        await ResolveForPlayer(
+            choiceContext,
+            cardOwner,
+            scryAmount,
+            retainDrawnCard);
     }
 
+
+    // ================================================================
+    // RESOLVE ONE PLAYER
+    // ================================================================
+
+    private static async Task ResolveForPlayer(
+        PlayerChoiceContext choiceContext,
+        Player player,
+        int scryAmount,
+        bool retainDrawnCard)
+    {
+        if (!player.Creature.IsAlive)
+            return;
+
+
+        // ============================================================
+        // SCRY
+        // ============================================================
+
+        await ScryCmd.Execute(
+            choiceContext,
+            player,
+            scryAmount);
+
+
+        if (!player.Creature.IsAlive)
+            return;
+
+
+        // ============================================================
+        // DRAW 1
+        // ============================================================
+        //
+        // Get the actual card that Manipulate Reality drew so the
+        // upgraded version can give Retain specifically to that card.
+        // ============================================================
+
+        CardModel? drawnCard =
+            await CardPileCmd.Draw(
+                choiceContext,
+                player);
+
+
+        // ============================================================
+        // UPGRADE: TEMPORARY RETAIN
+        // ============================================================
+        //
+        // Only the card drawn by Manipulate Reality receives Retain.
+        // GiveSingleTurnRetain means the change is temporary rather
+        // than permanently adding Retain to the CardModel.
+        // ============================================================
+
+        if (retainDrawnCard &&
+            drawnCard != null)
+        {
+            drawnCard.GiveSingleTurnRetain();
+        }
+    }
+
+
+    // ================================================================
+    // UPGRADE
+    // ================================================================
+    //
+    // No DynamicVar changes are needed.
+    //
+    // IsUpgraded is checked during play to enable the temporary
+    // Retain effect.
+    // ================================================================
 
     protected override void OnUpgrade()
     {
     }
 }
-*/

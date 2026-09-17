@@ -41,8 +41,8 @@ public static class LikeWaterPatch
             if (!code[i].Calls(likeWaterWithPower))
                 continue;
 
-            // 5(7) -> 5(7)
-            ReplaceInt(code, i - 3, 5);
+            // 5(7) -> 4(6)
+            ReplaceInt(code, i - 3, 4);
             ReplaceInt(code, i - 2, 2);
         }
 

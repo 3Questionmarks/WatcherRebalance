@@ -1,4 +1,6 @@
-﻿using BaseLib.Commands;
+﻿/* cause weird bugs sometimes so everything is now handled with just the card itself instead of it applying this power
+
+using BaseLib.Commands;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Entities.Powers;
@@ -88,3 +90,5 @@ public sealed class ManipulateRealityPower
         await PowerCmd.Remove(this);
     }
 }
+
+*/

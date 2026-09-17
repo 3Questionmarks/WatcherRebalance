@@ -131,8 +131,17 @@ public sealed class Config : SimpleModConfig
     [ConfigHoverTip]
     public static bool RestoreWish { get; set; } =
         false;
+    
+    
+    // ========================================================================
+    // Multiplayer Cards
+    // ========================================================================
 
-
+    [ConfigSection("Multiplayer Cards")]
+    [ConfigHoverTip]
+    public static bool EnableManipulateReality { get; set; } = true;
+    
+    
     // ========================================================================
     // FUN STUFF
     // ========================================================================

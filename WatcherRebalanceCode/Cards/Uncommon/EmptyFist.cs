@@ -174,7 +174,8 @@ public static class EmptyFistPatch
                 card,
                 cardPlay)
             .WithHitFx(
-                "vfx/vfx_attack_slash")
+                "vfx/vfx_attack_blunt",
+                tmpSfx: "blunt_attack.mp3")
             .Execute(ctx);
 
 

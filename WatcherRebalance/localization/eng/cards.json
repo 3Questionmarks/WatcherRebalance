@@ -1,6 +1,6 @@
 {
   "WATCHER-MIRACLE.title": "Miracle",
-  "WATCHER-MIRACLE.description": "{IfUpgraded:show:Gain 2 [gold]Mantra[/gold].n|}Gain {Energy:energyIcons()}.\n[gold]Divine[/gold]: Gain {StrengthPower:diff()} [gold]Strength[/gold] this turn.",
+  "WATCHER-MIRACLE.description": "{IfUpgraded:show:Gain 2 [gold]Mantra[/gold].\n|}Gain {Energy:energyIcons()}.\n[gold]Divine[/gold]: Gain {StrengthPower:diff()} [gold]Strength[/gold] this turn.",
   "WATCHER-INSIGHT.title": "Insight",
   "WATCHER-INSIGHT.description": "[gold]Divine[/gold]: [gold]Scry[/gold] {Scry:diff()}.\nDraw {Cards:diff()} cards.",
   "WATCHER-SMITE.title": "Smite",
@@ -34,7 +34,7 @@
   "WATCHER-EMPTY_MIND.title": "Empty Mind",
   "WATCHER-EMPTY_MIND.description": "Draw {Cards:diff()} cards.\nIf you are in a Stance, shuffle {IfUpgraded:show:{Insights:diff()} [gold]Insights[/gold]|an [gold]Insight[/gold]} into your [gold]Draw Pile[/gold].\nExit your Stance.",
   "WATCHER-LIKE_WATER.title": "Like Water",
-  "WATCHER-LIKE_WATER.description": "Whenever you enter [gold]Calm[/gold], gain {LikeWaterPower:diff()} [gold]Block[/gold].",
+  "WATCHER-LIKE_WATER.description": "Whenever you enter or exit [gold]Calm[/gold], gain {LikeWaterPower:diff()} [gold]Block[/gold].",
   "WATCHER-MENTAL_FORTRESS.title": "Mental Fortress",
   "WATCHER-MENTAL_FORTRESS.description": "At the start of your turn, choose a [gold]Token[/gold] card from your [gold]Exhaust Pile[/gold] and add it to your [gold]Hand[/gold].",
   "WATCHER-MENTAL_FORTRESS.selectionScreenPrompt": "Choose [gold]Token[/gold] cards to add to your [gold]Hand[/gold].",
@@ -108,11 +108,11 @@
   "WATCHERREBALANCE-DIVINE_INTERVENTION.title": "Divine Intervention",
   "WATCHERREBALANCE-DIVINE_INTERVENTION.description": "[gold]Divine[/gold]: [gold]Replay[/gold] {Replay:diff()}.\nChoose one: [gold]Wealth Beyond Measure[/gold], [gold]Attain Perfection[/gold], or [gold]Claim Your Destiny[/gold].\nEnd your turn.",
   "WATCHERREBALANCE-WEALTH_BEYOND_MEASURE.title": "Wealth Beyond Measure",
-  "WATCHERREBALANCE-WEALTH_BEYOND_MEASURE.description": "Gain 25 Gold.",
+  "WATCHERREBALANCE-WEALTH_BEYOND_MEASURE.description": "Gain 30 Gold.",
   "WATCHERREBALANCE-ATTAIN_PERFECTION.title": "Attain Perfection",
   "WATCHERREBALANCE-ATTAIN_PERFECTION.description": "[gold]Enchant[/gold] a random eligible card in your Deck.\nAttacks gain [purple]Sharp[/purple]. Skills gain [purple]Nimble[/purple]. Powers gain [purple]Swift[/purple].",
   "WATCHERREBALANCE-CLAIM_YOUR_DESTINY.title": "Claim Your Destiny",
-  "WATCHERREBALANCE-CLAIM_YOUR_DESTINY.description": "Gain an additional card reward.",
+  "WATCHERREBALANCE-CLAIM_YOUR_DESTINY.description": "Gain an additional special card reward that contains 5 cards from any character.",
   "WATCHERREBALANCE-EBB_AND_FLOW.title": "Ebb and Flow",
   "WATCHERREBALANCE-EBB_AND_FLOW.description": "Gain {Block:diff()} [gold]Block[/gold].\nThe first time you play this card each turn enter [gold]Calm[/gold].\nWhen you switch Stances, return this from your [gold]Discard Pile[/gold] to your [gold]Hand[/gold].",
   "WATCHERREBALANCE-FORESHADOW.title": "Foreshadow",
@@ -128,11 +128,13 @@
   "WATCHER-FLEETING_CLARITY.title": "Fleeting Clarity",
   "WATCHER-FLEETING_CLARITY.description": "Another player enters [gold]Calm[/gold].\nIf you are in [gold]Calm[/gold], all other players enter [gold]Calm[/gold].\nAt the start of the next turn they exit [gold]Calm[/gold].",
   "WATCHERREBALANCE-MANIPULATE_REALITY.title": "Manipulate Reality",
-  "WATCHERREBALANCE-MANIPULATE_REALITY.description": "All players [gold]Scry[/gold] {Scry:diff()} and draw a card.",
+  "WATCHERREBALANCE-MANIPULATE_REALITY.description": "All players [gold]Scry[/gold] {Scry:diff()} and draw a card.{IfUpgraded:show:\nThe cards drawn are [gold]Retained[/gold] this turn.|}",
   "WATCHERREBALANCE-ONSLAUGHT.title": "Onslaught",
-  "WATCHERREBALANCE-ONSLAUGHT.description": "Another player enters [gold]Wrath[/gold]. If you are in [gold]Wrath[/gold], all other players enter [gold]Wrath[/gold]. At the start of the next turn they exit [gold]Wrath[/gold].",
+  "WATCHERREBALANCE-ONSLAUGHT.description": "Another player enters [gold]Wrath[/gold].\nIf you are in [gold]Wrath[/gold], all other players enter [gold]Wrath[/gold].\nAt the start of the next turn they exit [gold]Wrath[/gold].",
   "WATCHERREBALANCE-OMNIPRESENCE.title": "Omnipresence",
-  "WATCHERREBALANCE-OMNIPRESENCE.description": "All players gain a [gold]Miracle[/gold], [gold]Smite[/gold], and [gold]Insight[/gold] into their Hand."
+  "WATCHERREBALANCE-OMNIPRESENCE.description": "All players gain a [gold]Miracle[/gold], [gold]Smite[/gold], and [gold]Insight[/gold] into their Hand.",
+  "WATCHER-WINDMILL_STRIKE.title": "Windmill Strike",
+  "WATCHER-WINDMILL_STRIKE.description": "Deal {Damage:diff()} damage {Repeat:diff()} times.\nWhen this card is [gold]Retained[/gold], increase the number of hits by 1 this combat."
 }
 
 

@@ -1,3 +1,13 @@
 {
-  
+  "WATCHER-PURE_WATER.description": "At the start of each combat, add [blue]1[/blue] [gold]Miracle[/gold] into your [gold]Hand[/gold]. Up to [blue]2[/blue] [gold]Token[/gold] cards in your [gold]Hand[/gold] do not count toward your maximum [gold]Hand[/gold] size.",
+  "WATCHER-PURE_WATER.flavor": "Filtered through fine sand and free of impurities.",
+  "WATCHER-PURE_WATER.title": "Pure Water",
+
+  "WATCHER-HOLY_WATER.description": "Replaces [gold]Pure Water[/gold]. At the start of each combat, add [blue]3[/blue] [gold]Miracles[/gold] into your [gold]Hand[/gold]. Up to [blue]5[/blue] [gold]Token[/gold] cards in your [gold]Hand[/gold] do not count toward your maximum [gold]Hand[/gold] size.",
+  "WATCHER-HOLY_WATER.flavor": "Collected from a time before the Spire.",
+  "WATCHER-HOLY_WATER.title": "Holy Water",
+
+  "WATCHERREBALANCE-SHATTERED_LENS.title": "Shattered Lens",
+  "WATCHERREBALANCE-SHATTERED_LENS.description": "Whenever you [gold]Scry[/gold], deal [blue]4[/blue] damage to ALL enemies for each card discarded.",
+  "WATCHERREBALANCE-SHATTERED_LENS.flavor": "Every future rejected leaves another crack in the glass."
 }

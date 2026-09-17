@@ -8,16 +8,9 @@ using WatcherRebalance.WatcherRebalanceCode.Cards.Rare.New;
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Token.New;
 
 [Pool(typeof(TokenCardPool))]
-public sealed class WealthBeyondMeasure
-    : DivineInterventionChoice
+public sealed class WealthBeyondMeasure() : DivineInterventionChoice(CardType.Power)
 {
-    private const int GoldAmount = 25;
-
-
-    public WealthBeyondMeasure()
-        : base(CardType.Power)
-    {
-    }
+    private const int GoldAmount = 30;
 
 
     public override async Task ResolveChoice(

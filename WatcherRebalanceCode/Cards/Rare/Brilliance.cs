@@ -3,6 +3,7 @@ using System.Reflection.Emit;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
@@ -29,35 +30,26 @@ public static class BrilliancePatch
      *
      * Rebalanced:
      *
-     * 2 Energy
-     * Deal 1 damage 2(3) times.
+     * 2(1) Energy
+     * Deal 1 damage 2 times.
      * Each hit deals additional damage equal to
      * Mantra gained this combat.
      *
      * No Retain.
      *
-     * Therefore:
-     *
-     * CalculatedDamage =
+     * CalculatedDamage:
      *     1 + Mantra gained this combat
      *
-     * Repeat =
-     *     2(3)
+     * Repeat:
+     *     2
+     *
+     * Upgrade:
+     *     Reduce cost by 1.
      * =========================================================
      */
 
-
     // =========================================================
     // COST
-    // =========================================================
-    //
-    // Original:
-    //     1 Energy
-    //
-    // Rebalanced:
-    //     2 Energy
-    //
-    // The upgrade does not change the cost.
     // =========================================================
 
     [HarmonyPatch(
@@ -71,48 +63,23 @@ public static class BrilliancePatch
         List<CodeInstruction> code =
             instructions.ToList();
 
-
-        // -----------------------------------------------------
-        // Find WatcherCardModel's constructor:
-        //
-        // WatcherCardModel(
-        //     int cost,
-        //     CardType type,
-        //     CardRarity rarity,
-        //     TargetType target,
-        //     bool shouldShowInCardLibrary = true)
-        //
-        // Brilliance originally passes 1 as its cost.
-        // -----------------------------------------------------
-
         ConstructorInfo? watcherConstructor =
-            typeof(WatcherCardModel)
-                .GetConstructors(
-                    BindingFlags.Instance |
-                    BindingFlags.Public |
-                    BindingFlags.NonPublic)
-                .FirstOrDefault(c =>
-                {
-                    ParameterInfo[] parameters =
-                        c.GetParameters();
-
-                    return
-                        parameters.Length == 5 &&
-                        parameters[0].ParameterType == typeof(int) &&
-                        parameters[1].ParameterType == typeof(CardType) &&
-                        parameters[2].ParameterType == typeof(CardRarity) &&
-                        parameters[3].ParameterType == typeof(TargetType) &&
-                        parameters[4].ParameterType == typeof(bool);
-                });
-
+            AccessTools.Constructor(
+                typeof(WatcherCardModel),
+                [
+                    typeof(int),
+                    typeof(CardType),
+                    typeof(CardRarity),
+                    typeof(TargetType),
+                    typeof(bool)
+                ]);
 
         if (watcherConstructor == null)
         {
             throw new MissingMethodException(
                 "WatcherRebalance: Could not find " +
-                "WatcherCardModel(int, CardType, CardRarity, TargetType, bool).");
+                "WatcherCardModel constructor.");
         }
-
 
         for (int i = 0; i < code.Count; i++)
         {
@@ -122,35 +89,29 @@ public static class BrilliancePatch
                 continue;
             }
 
+            if (i < 5)
+            {
+                throw new Exception(
+                    "WatcherRebalance: Invalid Brilliance constructor IL.");
+            }
 
-            // Immediately before the constructor call:
+            // Original:
+            //     1 Energy
             //
-            // i - 5 = cost
-            // i - 4 = CardType
-            // i - 3 = CardRarity
-            // i - 2 = TargetType
-            // i - 1 = shouldShowInCardLibrary
-            //
-            // Change:
-            //     cost 1
-            //
-            // to:
-            //     cost 2
+            // New:
+            //     2 Energy
 
             ReplaceInt(
                 code,
                 i - 5,
-                3);
-
+                2);
 
             return code;
         }
 
-
         throw new Exception(
             "WatcherRebalance: Failed to patch Brilliance's Energy cost.");
     }
-
 
     // =========================================================
     // CALCULATED DAMAGE
@@ -166,18 +127,6 @@ public static class BrilliancePatch
     {
         List<CodeInstruction> code =
             instructions.ToList();
-
-
-        // -----------------------------------------------------
-        // Locate:
-        //
-        // WithCalculatedDamage(
-        //     int,
-        //     Func<CardModel, Creature?, decimal>,
-        //     ValueProp,
-        //     int,
-        //     int)
-        // -----------------------------------------------------
 
         MethodInfo? withCalculatedDamage =
             typeof(ConstructedCardModel)
@@ -198,12 +147,10 @@ public static class BrilliancePatch
                     m.GetParameters()[4].ParameterType ==
                         typeof(int));
 
-
         MethodInfo? replacement =
             AccessTools.Method(
                 typeof(BrilliancePatch),
                 nameof(ReplaceCalculatedDamage));
-
 
         if (withCalculatedDamage == null)
         {
@@ -212,7 +159,6 @@ public static class BrilliancePatch
                 "ConstructedCardModel.WithCalculatedDamage.");
         }
 
-
         if (replacement == null)
         {
             throw new MissingMethodException(
@@ -220,36 +166,18 @@ public static class BrilliancePatch
                 "BrilliancePatch.ReplaceCalculatedDamage.");
         }
 
-
         bool patched =
             false;
-
 
         for (int i = 0; i < code.Count; i++)
         {
             if (!code[i].Calls(withCalculatedDamage))
                 continue;
 
-
-            // Replace:
-            //
-            // card.WithCalculatedDamage(
-            //     12,
-            //     MantraGainedThisCombat,
-            //     ValueProp.Move,
-            //     4,
-            //     0)
-            //
-            // with our helper.
-            //
-            // The helper keeps the original Mantra callback,
-            // but changes the base/upgrade values.
-
             CodeInstruction newInstruction =
                 new(
                     OpCodes.Call,
                     replacement);
-
 
             newInstruction.labels.AddRange(
                 code[i].labels);
@@ -257,17 +185,14 @@ public static class BrilliancePatch
             newInstruction.blocks.AddRange(
                 code[i].blocks);
 
-
             code[i] =
                 newInstruction;
-
 
             patched =
                 true;
 
             break;
         }
-
 
         if (!patched)
         {
@@ -276,10 +201,8 @@ public static class BrilliancePatch
                 "Brilliance's calculated damage.");
         }
 
-
         return code;
     }
-
 
     // =========================================================
     // REPLACE CALCULATED DAMAGE
@@ -313,26 +236,12 @@ public static class BrilliancePatch
                     m.GetParameters()[4].ParameterType ==
                         typeof(int));
 
-
         if (withCalculatedDamage == null)
         {
             throw new MissingMethodException(
                 "WatcherRebalance: Could not invoke " +
                 "ConstructedCardModel.WithCalculatedDamage.");
         }
-
-
-        // -----------------------------------------------------
-        // New calculated damage:
-        //
-        // Base:
-        //     1 + Mantra gained
-        //
-        // Upgrade:
-        //     still 1 + Mantra gained
-        //
-        // The upgrade improves Repeat instead.
-        // -----------------------------------------------------
 
         object? result =
             withCalculatedDamage.Invoke(
@@ -345,7 +254,6 @@ public static class BrilliancePatch
                     0
                 ]);
 
-
         if (result is not ConstructedCardModel
             constructedCard)
         {
@@ -355,13 +263,11 @@ public static class BrilliancePatch
                 "an unexpected result.");
         }
 
-
         return constructedCard;
     }
 
-
     // =========================================================
-    // ADD REPEAT 2(3)
+    // CONSTRUCTOR POSTFIX
     // =========================================================
 
     [HarmonyPatch(
@@ -373,8 +279,14 @@ public static class BrilliancePatch
     {
         AddRepeat(
             __instance);
+
+        AddCostUpgrade(
+            __instance);
     }
 
+    // =========================================================
+    // REPEAT
+    // =========================================================
 
     private static void AddRepeat(
         Brilliance card)
@@ -394,7 +306,6 @@ public static class BrilliancePatch
                     m.GetParameters()[2].ParameterType ==
                         typeof(int));
 
-
         if (withVar == null)
         {
             throw new MissingMethodException(
@@ -402,34 +313,47 @@ public static class BrilliancePatch
                 "ConstructedCardModel.WithVar(string, int, int).");
         }
 
-
-        // Base:
-        //     2 hits
-        //
-        // Upgrade:
-        //     +1 hit = 3
-
         withVar.Invoke(
             card,
             [
                 "Repeat",
                 2,
-                1
+                0
             ]);
     }
 
+    // =========================================================
+    // COST UPGRADE
+    // =========================================================
+
+    private static void AddCostUpgrade(
+        Brilliance card)
+    {
+        MethodInfo? withCostUpgradeBy =
+            typeof(ConstructedCardModel)
+                .GetMethods(
+                    BindingFlags.Instance |
+                    BindingFlags.NonPublic)
+                .FirstOrDefault(m =>
+                    m.Name == "WithCostUpgradeBy" &&
+                    m.GetParameters().Length == 1 &&
+                    m.GetParameters()[0].ParameterType ==
+                        typeof(int));
+
+        if (withCostUpgradeBy == null)
+        {
+            throw new MissingMethodException(
+                "WatcherRebalance: Could not find " +
+                "ConstructedCardModel.WithCostUpgradeBy(int).");
+        }
+
+        withCostUpgradeBy.Invoke(
+            card,
+            [-1]);
+    }
 
     // =========================================================
     // ON PLAY
-    // =========================================================
-    //
-    // Every hit uses CalculatedDamage:
-    //
-    //     1 + Mantra gained this combat
-    //
-    // Hit count:
-    //
-    //     2(3)
     // =========================================================
 
     [HarmonyPatch(
@@ -448,10 +372,8 @@ public static class BrilliancePatch
                 __0,
                 __1);
 
-
         return false;
     }
-
 
     private static async Task
         PlayRebalancedBrilliance(
@@ -462,24 +384,26 @@ public static class BrilliancePatch
         if (cardPlay.Target == null)
             return;
 
-
         int hitCount =
             card.DynamicVars["Repeat"]
                 .IntValue;
 
+        // Use the Watcher's normal Mantra-gain sound.
+        SfxCmd.Play(
+            "res://Watcher/audio/mantra_gain.ogg");
 
         await CommonActions
             .CardAttack(
                 card,
                 cardPlay)
             .WithHitFx(
-                "vfx/vfx_attack_slash")
+                "vfx/vfx_starry_impact",
+                tmpSfx: "blunt_attack.mp3")
             .WithHitCount(
                 hitCount)
             .Execute(
                 choiceContext);
     }
-
 
     // =========================================================
     // IL HELPERS
@@ -498,23 +422,52 @@ public static class BrilliancePatch
                 "patching Brilliance.");
         }
 
-
         CodeInstruction original =
             code[index];
 
-
         CodeInstruction replacement =
-            new(
-                OpCodes.Ldc_I4,
-                value);
+            value switch
+            {
+                -1 => new CodeInstruction(
+                    OpCodes.Ldc_I4_M1),
 
+                0 => new CodeInstruction(
+                    OpCodes.Ldc_I4_0),
+
+                1 => new CodeInstruction(
+                    OpCodes.Ldc_I4_1),
+
+                2 => new CodeInstruction(
+                    OpCodes.Ldc_I4_2),
+
+                3 => new CodeInstruction(
+                    OpCodes.Ldc_I4_3),
+
+                4 => new CodeInstruction(
+                    OpCodes.Ldc_I4_4),
+
+                5 => new CodeInstruction(
+                    OpCodes.Ldc_I4_5),
+
+                6 => new CodeInstruction(
+                    OpCodes.Ldc_I4_6),
+
+                7 => new CodeInstruction(
+                    OpCodes.Ldc_I4_7),
+
+                8 => new CodeInstruction(
+                    OpCodes.Ldc_I4_8),
+
+                _ => new CodeInstruction(
+                    OpCodes.Ldc_I4,
+                    value)
+            };
 
         replacement.labels.AddRange(
             original.labels);
 
         replacement.blocks.AddRange(
             original.blocks);
-
 
         code[index] =
             replacement;

@@ -21,7 +21,7 @@ public sealed class Condemn : WatcherRebalanceCard
 {
     public Condemn()
         : base(
-            3,
+            2,
             CardType.Attack,
             CardRarity.Rare,
             TargetType.AnyEnemy)
@@ -77,7 +77,7 @@ public sealed class Condemn : WatcherRebalanceCard
     //
     // Damage is upgraded through DamageVar.WithUpgrade(3).
     //
-    // Cost remains 3.
+    // Cost remains 2.
     // =========================================================
 
     protected override void OnUpgrade()
@@ -143,7 +143,7 @@ public sealed class Condemn : WatcherRebalanceCard
             // -------------------------------------------------
 
             SfxCmd.Play(
-                "event:/sfx/characters/ironclad/ironclad_hellraiser");
+                "event:/sfx/characters/attack_fire");
 
 
             // -------------------------------------------------

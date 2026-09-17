@@ -36,7 +36,7 @@
   "WATCHERREBALANCE-DEVOTION_POWER.description": "Whenever you change Stances, add [gold]Miracle[/gold] into your [gold]Hand[/gold].",
   "WATCHERREBALANCE-DEVOTION_POWER.smartDescription": "Whenever you change Stances, add [blue]{Amount}[/blue] [gold]Miracle[/gold] into your [gold]Hand[/gold].",
   "WATCHERREBALANCE-DESTINY_POWER.title": "Destiny Claimed",
-  "WATCHERREBALANCE-DESTINY_POWER.description": "You will receive an additional card reward at the end of combat.",
+  "WATCHERREBALANCE-DESTINY_POWER.description": "You will receive an additional special card reward at the end of combat.",
   "WATCHERREBALANCE-DESTINY_POWER.smartDescription": "You will receive [blue]{Amount}[/blue] additional card reward at the end of combat.",
   "WATCHERREBALANCE-FORESHADOWING_POWER.title": "Foreshadow",
   "WATCHERREBALANCE-FORESHADOWING_POWER.description": "Next turn, your first cards played will be played an additional time.",

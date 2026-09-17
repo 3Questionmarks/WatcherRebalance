@@ -1,7 +1,10 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
 using BaseLib.Abstracts;
+using BaseLib.Utils;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using Watcher.Code.Cards.Uncommon;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Uncommon;
@@ -9,12 +12,17 @@ namespace WatcherRebalance.WatcherRebalanceCode.Cards.Uncommon;
 [HarmonyPatch]
 public static class SandsOfTimePatch
 {
+    // =========================================================
+    // CONSTRUCTOR
+    // =========================================================
+
     [HarmonyPatch(typeof(SandsOfTime), MethodType.Constructor)]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> ConstructorTranspiler(
         IEnumerable<CodeInstruction> instructions)
     {
-        List<CodeInstruction> code = instructions.ToList();
+        List<CodeInstruction> code =
+            instructions.ToList();
 
         MethodInfo? withDamage =
             typeof(ConstructedCardModel)
@@ -41,8 +49,9 @@ public static class SandsOfTimePatch
             // Original:
             // WithDamage(20, 6) -> 20(26)
             //
-            // New:
+            // Rebalanced:
             // WithDamage(20, 6) -> 20(26)
+
             ReplaceInt(
                 code,
                 i - 1,
@@ -53,6 +62,43 @@ public static class SandsOfTimePatch
 
         return code;
     }
+
+    // =========================================================
+    // ON PLAY
+    // =========================================================
+
+    [HarmonyPatch(typeof(SandsOfTime), "OnPlay")]
+    [HarmonyPrefix]
+    private static bool OnPlayPrefix(
+        SandsOfTime __instance,
+        PlayerChoiceContext __0,
+        CardPlay __1,
+        ref Task __result)
+    {
+        __result = PlayWithCustomFx(
+            __instance,
+            __0,
+            __1);
+
+        return false;
+    }
+
+    private static async Task PlayWithCustomFx(
+        SandsOfTime card,
+        PlayerChoiceContext choiceContext,
+        CardPlay cardPlay)
+    {
+        await CommonActions
+            .CardAttack(card, cardPlay)
+            .WithHitFx(
+                "vfx/vfx_sandy_impact",
+                tmpSfx: "blunt_attack.mp3")
+            .Execute(choiceContext);
+    }
+
+    // =========================================================
+    // HELPER
+    // =========================================================
 
     private static void ReplaceInt(
         List<CodeInstruction> code,
@@ -73,6 +119,7 @@ public static class SandsOfTimePatch
         replacement.blocks.AddRange(
             original.blocks);
 
-        code[index] = replacement;
+        code[index] =
+            replacement;
     }
 }

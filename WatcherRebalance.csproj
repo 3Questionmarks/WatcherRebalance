@@ -70,10 +70,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="WatcherRebalance\images\relics\big\"/>
-    </ItemGroup>
-
-    <ItemGroup>
       <Content Include="WatcherRebalanceCode\Cards\Token\New\DivineInterventionChoice" />
     </ItemGroup>
 

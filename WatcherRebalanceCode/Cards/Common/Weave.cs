@@ -1,8 +1,10 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
 using BaseLib.Abstracts;
+using BaseLib.Utils;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using Watcher.Code.Abstract;
 using Watcher.Code.Cards.Uncommon;
 
@@ -61,9 +63,6 @@ public static class WeavePatch
 
         for (int i = 0; i < code.Count; i++)
         {
-            // Original: WithDamage(4, 2)
-            // New:      WithDamage(4, 2)
-
             if (!damagePatched &&
                 code[i].Calls(withDamage))
             {
@@ -127,5 +126,45 @@ public static class WeavePatch
         replacement.blocks.AddRange(original.blocks);
 
         code[index] = replacement;
+    }
+}
+
+
+// ============================================================================
+// WEAVE VFX + SFX
+// ============================================================================
+
+[HarmonyPatch(typeof(Weave), "OnPlay")]
+public static class WeaveFxPatch
+{
+    [HarmonyPrefix]
+    static bool Prefix(
+        Weave __instance,
+        PlayerChoiceContext __0,
+        CardPlay __1,
+        ref Task __result)
+    {
+        __result = PlayWeave(
+            __instance,
+            __0,
+            __1);
+
+        return false;
+    }
+
+    private static async Task PlayWeave(
+        Weave card,
+        PlayerChoiceContext choiceContext,
+        CardPlay cardPlay)
+    {
+        await CommonActions
+            .CardAttack(
+                card,
+                cardPlay)
+            .WithHitFx(
+                "vfx/vfx_attack_blunt",
+                tmpSfx: "blunt_attack.mp3")
+            .Execute(
+                choiceContext);
     }
 }

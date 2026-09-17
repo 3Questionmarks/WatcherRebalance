@@ -97,14 +97,14 @@ public static class MentalFortressPatch
             // 1 Energy
             //
             // New:
-            // 3 Energy
+            // 2 Energy
             if (code[i].operand is ConstructorInfo constructor &&
                 constructor == watcherCardConstructor)
             {
                 ReplaceInt(
                     code,
                     i - 5,
-                    3);
+                    2);
 
                 continue;
             }

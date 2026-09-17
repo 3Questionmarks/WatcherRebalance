@@ -1,8 +1,12 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
 using BaseLib.Abstracts;
+using BaseLib.Utils;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
+using MegaCrit.Sts2.Core.ValueProps;
 using Watcher.Code.Abstract;
 using Watcher.Code.Cards.Uncommon;
 
@@ -146,5 +150,40 @@ public static class WallopPatch
         replacement.blocks.AddRange(original.blocks);
 
         code[index] = replacement;
+    }
+
+    [HarmonyPatch("OnPlay")]
+    [HarmonyPrefix]
+    private static bool OnPlayPrefix(
+        Wallop __instance,
+        PlayerChoiceContext choiceContext,
+        CardPlay cardPlay,
+        ref Task __result)
+    {
+        __result = PlayWithCustomFx(__instance, choiceContext, cardPlay);
+        return false;
+    }
+
+    private static async Task PlayWithCustomFx(
+        Wallop card,
+        PlayerChoiceContext choiceContext,
+        CardPlay cardPlay)
+    {
+        var command = await CommonActions
+            .CardAttack(card, cardPlay)
+            .WithHitFx(
+                "vfx/vfx_attack_blunt",
+                tmpSfx: "blunt_attack.mp3")
+            .Execute(choiceContext);
+
+        var unblockedDamage = command.Results
+            .SelectMany(result => result)
+            .Sum(damageResult => damageResult.UnblockedDamage);
+
+        await CreatureCmd.GainBlock(
+            card.Owner.Creature,
+            unblockedDamage,
+            ValueProp.Move,
+            cardPlay);
     }
 }

@@ -27,13 +27,6 @@ public static class FlyingSleevesPatch
     // =========================================================
     // CONSTRUCTOR
     // =========================================================
-    //
-    // Original:
-    // WithDamage(4, 2);
-    //
-    // New:
-    // WithDamage(4, 0);
-    //
 
     [HarmonyPatch(MethodType.Constructor)]
     [HarmonyTranspiler]
@@ -129,8 +122,8 @@ public static class FlyingSleevesPatch
             card,
             new object[]
             {
-                4, // Base damage
-                0  // Damage no longer upgrades
+                4,
+                0
             }
         );
 
@@ -177,11 +170,11 @@ public static class FlyingSleevesPatch
                 ? 3
                 : 2;
 
-        await CommonActions.CardAttack(
-                card,
-                cardPlay
-            )
-            .WithHitFx("vfx/vfx_attack_slash")
+        await CommonActions
+            .CardAttack(card, cardPlay)
+            .WithHitFx(
+                "vfx/vfx_flying_slash",
+                tmpSfx: "blunt_attack.mp3")
             .WithHitCount(hitCount)
             .Execute(ctx);
     }

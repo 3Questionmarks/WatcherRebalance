@@ -22,7 +22,7 @@ public static class BattleHymnPatch
     //
     // Rebalanced:
     //
-    //     Cost 2
+    //     Cost 1
     //     Upgrade reduces Cost by 1
     //
     // ================================================================
@@ -31,9 +31,9 @@ public static class BattleHymnPatch
     // ------------------------------------------------
     // Change base cost:
     //
-    //     1 -> 2
+    //     1 -> 1
     // ------------------------------------------------
-
+    /*
     [HarmonyPatch(
         typeof(BattleHymn),
         MethodType.Constructor)]
@@ -78,7 +78,7 @@ public static class BattleHymnPatch
             "WatcherRebalance: Could not find " +
             "Battle Hymn's base cost in its constructor.");
     }
-
+    */
 
     // ================================================================
     // UPGRADE

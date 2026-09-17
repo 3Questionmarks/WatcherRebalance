@@ -222,9 +222,10 @@ public static class RemovedWatcherCardSafetyPatch
         {
             PressurePoints =>
                 !Config.RestorePressurePoints,
-
-            //Rushdown =>
-            //    !Config.RestoreRushdown,
+            
+            //No Config for Rushdown since effect was moved to Ancient card
+            Rushdown =>
+                true,
 
             ConjureBlade =>
                 !Config.RestoreConjureBlade,

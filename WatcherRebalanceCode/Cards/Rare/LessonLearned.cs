@@ -3,7 +3,14 @@ using System.Reflection.Emit;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Commands;
+using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
+using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.Models.Powers;
+using MegaCrit.Sts2.Core.Nodes;
+using MegaCrit.Sts2.Core.Nodes.Vfx;
 using Watcher.Code.Abstract;
 using Watcher.Code.Cards.Rare;
 
@@ -86,23 +93,10 @@ public static class LessonLearnedPatch
             // COST
             //
             // Original:
-            //
-            //     base(
-            //         2,
-            //         CardType.Attack,
-            //         CardRarity.Rare,
-            //         TargetType.AnyEnemy)
+            //     2
             //
             // New:
-            //
-            //     base(
-            //         3,
-            //         CardType.Attack,
-            //         CardRarity.Rare,
-            //         TargetType.AnyEnemy)
-            //
-            // This is the exact same method used by the working
-            // Mental Fortress patch.
+            //     3
             // -----------------------------------------------------
 
             if (code[i].operand is ConstructorInfo constructor &&
@@ -121,14 +115,10 @@ public static class LessonLearnedPatch
             // DAMAGE
             //
             // Original:
-            //
             //     WithDamage(10, 3)
             //
             // New:
-            //
             //     WithDamage(10, 0)
-            //
-            // So Lesson Learned stays at 10 damage when upgraded.
             // -----------------------------------------------------
 
             if (code[i].Calls(withDamage))
@@ -210,11 +200,137 @@ public static class LessonLearnedPatch
 
 
     // =========================================================
-    // INTEGER REPLACEMENT
+    // ON PLAY
     // =========================================================
-    //
-    // Deliberately copied from the working Mental Fortress
-    // implementation.
+
+    [HarmonyPatch(
+        typeof(LessonLearned),
+        "OnPlay")]
+    [HarmonyPrefix]
+    private static bool OnPlayPrefix(
+        LessonLearned __instance,
+        PlayerChoiceContext __0,
+        CardPlay __1,
+        ref Task __result)
+    {
+        __result =
+            PlayWithCustomFx(
+                __instance,
+                __0,
+                __1);
+
+        return false;
+    }
+
+
+    private static async Task PlayWithCustomFx(
+        LessonLearned card,
+        PlayerChoiceContext choiceContext,
+        CardPlay cardPlay)
+    {
+        if (cardPlay.Target == null)
+            return;
+
+
+        // Determine whether Fatal is allowed to trigger.
+        var shouldTriggerFatal =
+            cardPlay.Target.Powers.All(
+                p => p.ShouldOwnerDeathTriggerFatal());
+
+
+        // =====================================================
+        // ATTACK
+        //
+        // Blunt impact + blunt attack sound.
+        // =====================================================
+
+        var attackCommand =
+            await CommonActions
+                .CardAttack(
+                    card,
+                    cardPlay)
+                .WithHitFx(
+                    "vfx/vfx_attack_blunt",
+                    tmpSfx: "blunt_attack.mp3")
+                .Execute(
+                    choiceContext);
+
+
+        // =====================================================
+        // FATAL
+        // =====================================================
+
+        if (!shouldTriggerFatal ||
+            !attackCommand.Results.Any(
+                r => r.Any(
+                    g => g is
+                    {
+                        WasTargetKilled: true,
+                        Receiver.IsSecondaryEnemy: false
+                    })))
+        {
+            return;
+        }
+
+
+        var upgradableCards =
+            PileType.Deck
+                .GetPile(card.Owner)
+                .Cards
+                .Where(c => c.IsUpgradable)
+                .ToList();
+
+
+        if (upgradableCards.Count <= 0)
+            return;
+
+
+        await Cmd.Wait(0.5f);
+
+
+        var cardModel =
+            card.Owner
+                .RunState
+                .Rng
+                .Niche
+                .NextItem(
+                    upgradableCards);
+
+
+        if (cardModel == null)
+            return;
+
+
+        card.Owner
+            .RunState
+            .CurrentMapPointHistoryEntry?
+            .GetEntry(
+                card.Owner.NetId)
+            .UpgradedCards
+            .Add(
+                cardModel.Id);
+
+
+        cardModel.UpgradeInternal();
+        cardModel.FinalizeUpgradeInternal();
+
+
+        if (LocalContext.IsMe(card.Owner))
+        {
+            NRun.Instance?
+                .GlobalUi
+                .CardPreviewContainer
+                .AddChildSafely(
+                    NCardSmithVfx.Create(
+                        [
+                            cardModel
+                        ])!);
+        }
+    }
+
+
+    // =========================================================
+    // INTEGER REPLACEMENT
     // =========================================================
 
     private static void ReplaceInt(

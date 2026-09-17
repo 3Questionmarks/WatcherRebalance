@@ -26,7 +26,7 @@ public static class LikeWaterPowerPatch
     }
 
     // New:
-    // Whenever you ENTER Calm, gain Block.
+    // Whenever you ENTER or EXIT Calm, gain Block.
     [HarmonyPatch(
         typeof(WatcherHook),
         nameof(WatcherHook.OnStanceChange))]
@@ -40,7 +40,6 @@ public static class LikeWaterPowerPatch
     {
         __result = HandleStanceChange(
             __result,
-            ctx,
             player,
             oldStance,
             newStance);
@@ -48,19 +47,22 @@ public static class LikeWaterPowerPatch
 
     private static async Task HandleStanceChange(
         Task original,
-        PlayerChoiceContext ctx,
         Player player,
         WatcherStanceModel oldStance,
         WatcherStanceModel newStance)
     {
         await original;
 
-        // Only trigger upon ENTERING Calm.
-        if (newStance is not CalmStance)
-            return;
+        bool wasCalm = oldStance is CalmStance;
+        bool isCalm = newStance is CalmStance;
 
-        // Defensive safeguard against Calm -> Calm.
-        if (oldStance is CalmStance)
+        // Trigger only when crossing the Calm boundary:
+        //
+        // non-Calm -> Calm = entering Calm
+        // Calm -> non-Calm = exiting Calm
+        //
+        // Calm -> Calm and non-Calm -> non-Calm do nothing.
+        if (wasCalm == isCalm)
             return;
 
         LikeWaterPower? power =

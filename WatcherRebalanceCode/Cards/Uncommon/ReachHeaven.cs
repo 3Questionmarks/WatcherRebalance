@@ -74,6 +74,9 @@ public static class ReachHeavenPatch
     {
         await CommonActions
             .CardAttack(card, cardPlay)
+            .WithHitFx(
+                "vfx/vfx_attack_blunt",
+                tmpSfx: "blunt_attack.mp3")
             .Execute(choiceContext);
 
         await WatcherCmd.GiveCard<ThroughViolence>(

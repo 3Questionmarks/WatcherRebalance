@@ -1,6 +1,8 @@
 ﻿using System.Reflection.Emit;
 using HarmonyLib;
+using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
 using Watcher.Code.Cards.Uncommon;
 
@@ -237,5 +239,30 @@ public static class SignatureMovePatch
 
 
         return replacement;
+    }
+
+    [HarmonyPatch(typeof(SignatureMove), "OnPlay")]
+    [HarmonyPrefix]
+    private static bool OnPlayPrefix(
+        SignatureMove __instance,
+        PlayerChoiceContext choiceContext,
+        CardPlay cardPlay,
+        ref Task __result)
+    {
+        __result = PlayWithCustomFx(__instance, choiceContext, cardPlay);
+        return false;
+    }
+
+    private static async Task PlayWithCustomFx(
+        SignatureMove card,
+        PlayerChoiceContext choiceContext,
+        CardPlay cardPlay)
+    {
+        await CommonActions
+            .CardAttack(card, cardPlay)
+            .WithHitFx(
+                "vfx/vfx_attack_blunt",
+                tmpSfx: "blunt_attack.mp3")
+            .Execute(choiceContext);
     }
 }

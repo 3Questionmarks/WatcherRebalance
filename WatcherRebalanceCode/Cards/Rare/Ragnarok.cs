@@ -91,14 +91,11 @@ public static class RagnarokConstructorPatch
         {
             // =================================================
             // DAMAGE
-            // =================================================
             //
             // Original:
-            //
             //     WithDamage(5, 1)
             //
             // New:
-            //
             //     WithDamage(5, 0)
             // =================================================
 
@@ -116,15 +113,12 @@ public static class RagnarokConstructorPatch
 
             // =================================================
             // REPEAT
-            // =================================================
             //
             // Original:
+            //     Repeat 5, upgrade +1
             //
-            //     WithVars(
-            //         new RepeatVar(5)
-            //             .WithUpgrade(1))
-            //
-            // Replace the whole WithVars call with our helper.
+            // New:
+            //     Repeat 5
             // =================================================
 
             if (code[i].Calls(withVars))
@@ -289,7 +283,12 @@ public static class RagnarokOnPlayPatch
         // BASE
         // =====================================================
         //
-        // Preserve the original random-enemy behavior.
+        // Preserve original random-enemy behavior.
+        //
+        // Five hits.
+        // Each hit:
+        //     vfx_attack_lightning
+        //     lightning_orb_evoke.mp3
         // =====================================================
 
         if (!card.IsUpgraded)
@@ -300,7 +299,8 @@ public static class RagnarokOnPlayPatch
                     cardPlay)
                 .WithHitCount(5)
                 .WithHitFx(
-                    "vfx/vfx_attack_slash")
+                    "vfx/vfx_attack_lightning",
+                    tmpSfx: "lightning_orb_evoke.mp3")
                 .Execute(
                     choiceContext);
 
@@ -314,6 +314,9 @@ public static class RagnarokOnPlayPatch
         // =====================================================
         //
         // Deal 5 damage to ALL enemies, five times.
+        //
+        // Lightning FX/SFX are attached directly to the
+        // multi-target, multi-hit DamageCmd.
         // =====================================================
 
         if (card.CombatState == null)
@@ -330,7 +333,8 @@ public static class RagnarokOnPlayPatch
             .TargetingAllOpponents(
                 card.CombatState)
             .WithHitFx(
-                "vfx/vfx_attack_slash")
+                "vfx/vfx_attack_lightning",
+                tmpSfx: "lightning_orb_evoke.mp3")
             .Execute(
                 choiceContext);
     }

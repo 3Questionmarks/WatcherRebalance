@@ -108,7 +108,16 @@ public static class CarveRealityPatch
         // Deal damage.
         await CommonActions
             .CardAttack(card, cardPlay)
+            .WithHitFx(
+                "vfx/vfx_big_slash",
+                tmpSfx: "regent_attack")
             .Execute(choiceContext);
+
+        ArgumentNullException.ThrowIfNull(cardPlay.Target);
+
+        VfxCmd.PlayOnCreatureCenter(
+            cardPlay.Target,
+            "vfx/vfx_starry_impact");
 
         // Add the normal Smite.
         await WatcherCmd.GiveCard<Smite>(

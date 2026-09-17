@@ -12,14 +12,17 @@ using Watcher.Code.Commands;
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Common.New;
 
 [Pool(typeof(WatcherCardPool))]
-public sealed class HeroicStrike() : WatcherRebalanceCard(2,
+public sealed class HeroicStrike() : WatcherRebalanceCard(
+    2,
     CardType.Attack,
     CardRarity.Common,
     TargetType.AnyEnemy)
 {
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
-        new DamageVar(10m, ValueProp.Move)
+        new DamageVar(
+            10m,
+            ValueProp.Move)
     ];
 
     protected override IEnumerable<IHoverTip> ExtraHoverTips =>
@@ -31,16 +34,47 @@ public sealed class HeroicStrike() : WatcherRebalanceCard(2,
         PlayerChoiceContext choiceContext,
         CardPlay cardPlay)
     {
-        ArgumentNullException.ThrowIfNull(cardPlay.Target);
+        ArgumentNullException.ThrowIfNull(
+            cardPlay.Target);
+
+        // =====================================================
+        // ATTACK
+        // Dramatic stab + blunt impact
+        // =====================================================
 
         await DamageCmd
-            .Attack(DynamicVars.Damage.BaseValue)
-            .FromCard(this, cardPlay)
-            .Targeting(cardPlay.Target)
+            .Attack(
+                DynamicVars.Damage.BaseValue)
+            .FromCard(
+                this,
+                cardPlay)
+            .Targeting(
+                cardPlay.Target)
             .WithHitFx(
-                "vfx/vfx_attack_blunt",
+                "vfx/vfx_dramatic_stab",
                 tmpSfx: "blunt_attack.mp3")
-            .Execute(choiceContext);
+            .Execute(
+                choiceContext);
+
+
+        // =====================================================
+        // MIRACLE EFFECT
+        // Star VFX + Regent select sound
+        // =====================================================
+
+        SfxCmd.Play(
+            "event:/sfx/characters/regent/regent_select");
+
+        await Cmd.Wait(0.2f);
+
+        VfxCmd.PlayOnCreatureCenter(
+            cardPlay.Target,
+            "vfx/star_gain_vfx");
+
+
+        // =====================================================
+        // MIRACLE
+        // =====================================================
 
         await WatcherCmd.GiveCard<Miracle>(
             Owner,
@@ -51,6 +85,7 @@ public sealed class HeroicStrike() : WatcherRebalanceCard(2,
 
     protected override void OnUpgrade()
     {
-        DynamicVars.Damage.UpgradeValueBy(5m);
+        DynamicVars.Damage.UpgradeValueBy(
+            5m);
     }
 }
