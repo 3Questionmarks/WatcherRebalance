@@ -280,15 +280,13 @@ public static class RagnarokOnPlayPatch
         CardPlay cardPlay)
     {
         // =====================================================
-        // BASE
+        // BASE RAGNAROK
         // =====================================================
         //
-        // Preserve original random-enemy behavior.
+        // Five random hits.
         //
-        // Five hits.
-        // Each hit:
-        //     vfx_attack_lightning
-        //     lightning_orb_evoke.mp3
+        // This remains one attack command so Vigor and other
+        // attack-wide modifiers apply correctly to all hits.
         // =====================================================
 
         if (!card.IsUpgraded)
@@ -310,13 +308,24 @@ public static class RagnarokOnPlayPatch
 
 
         // =====================================================
-        // UPGRADE
+        // UPGRADED RAGNAROK
         // =====================================================
         //
-        // Deal 5 damage to ALL enemies, five times.
+        // Five hits against ALL enemies.
         //
-        // Lightning FX/SFX are attached directly to the
-        // multi-target, multi-hit DamageCmd.
+        // This is deliberately ONE AttackCommand with five hits.
+        //
+        // This is important for Vigor:
+        // splitting the attack into five separate DamageCmd
+        // attacks causes Vigor to only benefit the first attack.
+        //
+        // SpawningHitVfxOnEachCreature() tells AttackCommand
+        // that the lightning VFX should be spawned separately
+        // on every creature instead of once on the enemy side.
+        //
+        // Because AttackCommand processes hit VFX inside its
+        // hit loop, every living enemy gets its own lightning
+        // strike on EACH of the five hits.
         // =====================================================
 
         if (card.CombatState == null)
@@ -326,15 +335,27 @@ public static class RagnarokOnPlayPatch
         await DamageCmd
             .Attack(
                 card.DynamicVars.Damage.BaseValue)
+
+            // Five hits belonging to the same attack.
             .WithHitCount(5)
+
             .FromCard(
                 card,
                 cardPlay)
+
+            // Every opponent is hit by every hit.
             .TargetingAllOpponents(
                 card.CombatState)
+
+            // Lightning VFX + SFX for each hit.
             .WithHitFx(
                 "vfx/vfx_attack_lightning",
                 tmpSfx: "lightning_orb_evoke.mp3")
+
+            // For an AoE attack, spawn a separate copy of the
+            // lightning VFX on every individual target.
+            .SpawningHitVfxOnEachCreature()
+
             .Execute(
                 choiceContext);
     }

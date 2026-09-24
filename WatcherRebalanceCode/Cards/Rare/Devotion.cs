@@ -75,7 +75,7 @@ public static class DevotionConstructorPatch
 
 
         // =====================================================
-        // COST: 1 -> 2
+        // COST: 1 -> 3
         // =====================================================
 
         bool changedCost = false;
@@ -99,7 +99,7 @@ public static class DevotionConstructorPatch
             ReplaceInt(
                 code,
                 i - 5,
-                2);
+                3);
 
             changedCost = true;
             break;

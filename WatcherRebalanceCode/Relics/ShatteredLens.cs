@@ -20,7 +20,7 @@ public sealed class ShatteredLens :
     WatcherRebalanceRelic,
     IAfterScryed
 {
-    private const int DamagePerDiscard = 4;
+    private const int DamagePerDiscard = 3;
 
 
     public override RelicRarity Rarity =>
@@ -80,7 +80,7 @@ public sealed class ShatteredLens :
         //
         // ValueProp.Unpowered means the relic always deals exactly:
         //
-        //     4 × number of discarded cards
+        //     3 × number of discarded cards
         //
         // It is not increased by Strength, Wrath, Divinity, etc.
         await CreatureCmd.Damage(

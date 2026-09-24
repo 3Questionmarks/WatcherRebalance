@@ -51,9 +51,9 @@ public static class NirvanaPatch
             // WithPower<NirvanaPower>(3, 1, false)
             //
             // New:
-            // WithPower<NirvanaPower>(3, 2, false)
+            // WithPower<NirvanaPower>(3, 1, false)
             ReplaceInt(code, i - 3, 3);
-            ReplaceInt(code, i - 2, 2);
+            ReplaceInt(code, i - 2, 1);
 
             break;
         }

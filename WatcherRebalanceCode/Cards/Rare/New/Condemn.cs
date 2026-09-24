@@ -33,7 +33,7 @@ public sealed class Condemn : WatcherRebalanceCard
     // VARIABLES
     // =========================================================
     //
-    // Deal 7(10) damage.
+    // Deal 7(9) damage.
     //
     // Base:    7
     // Upgrade: +2
@@ -61,10 +61,6 @@ public sealed class Condemn : WatcherRebalanceCard
     // =========================================================
     // GOLD GLOW
     // =========================================================
-    //
-    // Glow while in Divinity because the execution effect
-    // is currently active.
-    // =========================================================
 
     protected override bool ShouldGlowGoldInternal =>
         CombatState != null &&
@@ -75,7 +71,7 @@ public sealed class Condemn : WatcherRebalanceCard
     // UPGRADE
     // =========================================================
     //
-    // Damage is upgraded through DamageVar.WithUpgrade(3).
+    // Damage is upgraded through DamageVar.WithUpgrade(2).
     //
     // Cost remains 2.
     // =========================================================
@@ -106,70 +102,12 @@ public sealed class Condemn : WatcherRebalanceCard
 
 
         // =====================================================
-        // DIVINITY EXECUTION
+        // DAMAGE
         // =====================================================
         //
-        // Normal enemies:
-        //     Instantly killed.
+        // Damage is always dealt first.
         //
-        // Elite encounters:
-        //     All enemies protected.
-        //
-        // Boss encounters:
-        //     Primary Boss protected.
-        //
-        //     Secondary/minion enemies can still be executed.
-        // =====================================================
-
-        if (inDivinity &&
-            !IsProtectedFromCondemn(target))
-        {
-            // -------------------------------------------------
-            // EXECUTION VFX
-            // -------------------------------------------------
-            //
-            // Must happen before HP is set to zero because
-            // PlayOnCreatureCenter will not spawn on a dead
-            // creature.
-            // -------------------------------------------------
-
-            VfxCmd.PlayOnCreatureCenter(
-                target,
-                "vfx/vfx_fire_burst");
-
-
-            // -------------------------------------------------
-            // EXECUTION SFX
-            // -------------------------------------------------
-
-            SfxCmd.Play(
-                "event:/sfx/characters/attack_fire");
-
-
-            // -------------------------------------------------
-            // EXECUTE
-            // -------------------------------------------------
-
-            target.SetCurrentHpInternal(
-                0);
-
-
-            await CreatureCmd.Kill(
-                target);
-
-
-            return;
-        }
-
-
-        // =====================================================
-        // NORMAL / PROTECTED DAMAGE
-        // =====================================================
-        //
-        // Deal 7(10) damage 3 times.
-        //
-        // This branch is also used against protected Elite /
-        // Boss enemies while Condemn is played in Divinity.
+        // Deal 7(9) damage 3 times.
         // =====================================================
 
         await DamageCmd
@@ -188,6 +126,71 @@ public sealed class Condemn : WatcherRebalanceCard
                 "heavy_attack.mp3")
             .Execute(
                 choiceContext);
+
+
+        // =====================================================
+        // DIVINITY EXECUTION
+        // =====================================================
+        //
+        // After dealing damage, execute the target if:
+        //
+        // - We are in Divinity.
+        // - The target survived the attack.
+        // - The target is below half of its maximum HP.
+        // - The target is not protected as an Elite/Boss.
+        // =====================================================
+
+        if (!inDivinity)
+            return;
+
+
+        if (target.CurrentHp <= 0)
+            return;
+
+
+        if (IsProtectedFromCondemn(target))
+            return;
+
+
+        // Strictly UNDER half HP.
+        //
+        // Multiplying CurrentHp by 2 avoids floating-point
+        // calculations and correctly makes exactly 50% ineligible.
+        if (target.CurrentHp * 2 >= target.MaxHp)
+            return;
+
+
+        // -----------------------------------------------------
+        // EXECUTION VFX
+        // -----------------------------------------------------
+        //
+        // Play the VFX before setting HP to zero because
+        // PlayOnCreatureCenter will not spawn on a dead creature.
+        // -----------------------------------------------------
+
+        VfxCmd.PlayOnCreatureCenter(
+            target,
+            "vfx/vfx_fire_burst");
+
+
+        // -----------------------------------------------------
+        // EXECUTION SFX
+        // -----------------------------------------------------
+
+        SfxCmd.Play(
+            "event:/sfx/characters/attack_fire");
+
+
+        // -----------------------------------------------------
+        // EXECUTE
+        // -----------------------------------------------------
+
+        target.SetCurrentHpInternal(
+            0);
+
+
+        await CreatureCmd.Kill(
+            target);
     }
 
 
@@ -225,7 +228,7 @@ public sealed class Condemn : WatcherRebalanceCard
         //     Protected.
         //
         // Secondary/minion enemies:
-        //     Can be executed.
+        //     Can still be executed.
         // =====================================================
 
         if (roomType == RoomType.Boss)

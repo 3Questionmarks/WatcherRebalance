@@ -87,7 +87,7 @@ public static class WindmillStrikePatch
             ReplaceInt(
                 code,
                 i - 5,
-                1);
+                2);
 
 
             costPatched = true;

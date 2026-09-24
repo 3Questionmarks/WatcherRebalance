@@ -8,6 +8,7 @@ using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.HoverTips;
 using MegaCrit.Sts2.Core.Models.Powers;
 using MegaCrit.Sts2.Core.Nodes;
 using MegaCrit.Sts2.Core.Nodes.Vfx;
@@ -16,7 +17,6 @@ using Watcher.Code.Cards.Rare;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Rare;
 
-
 [HarmonyPatch]
 public static class LessonLearnedPatch
 {
@@ -24,20 +24,12 @@ public static class LessonLearnedPatch
     // CONSTRUCTOR
     // =========================================================
 
-    [HarmonyPatch(
-        typeof(LessonLearned),
-        MethodType.Constructor)]
+    [HarmonyPatch(typeof(LessonLearned), MethodType.Constructor)]
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> ConstructorTranspiler(
         IEnumerable<CodeInstruction> instructions)
     {
-        List<CodeInstruction> code =
-            instructions.ToList();
-
-
-        // ---------------------------------------------------------
-        // Find WatcherCardModel constructor.
-        // ---------------------------------------------------------
+        List<CodeInstruction> code = instructions.ToList();
 
         ConstructorInfo? watcherCardConstructor =
             AccessTools.Constructor(
@@ -50,24 +42,11 @@ public static class LessonLearnedPatch
                     typeof(bool)
                 ]);
 
-
-        // ---------------------------------------------------------
-        // Find WithDamage(int, int).
-        // ---------------------------------------------------------
-
         MethodInfo? withDamage =
-            typeof(ConstructedCardModel)
-                .GetMethods(
-                    BindingFlags.Instance |
-                    BindingFlags.NonPublic)
-                .FirstOrDefault(m =>
-                    m.Name == "WithDamage" &&
-                    m.GetParameters().Length == 2 &&
-                    m.GetParameters()[0].ParameterType ==
-                    typeof(int) &&
-                    m.GetParameters()[1].ParameterType ==
-                    typeof(int));
-
+            AccessTools.Method(
+                typeof(ConstructedCardModel),
+                "WithDamage",
+                [typeof(int), typeof(int)]);
 
         if (watcherCardConstructor == null)
         {
@@ -75,38 +54,25 @@ public static class LessonLearnedPatch
                 "Could not find WatcherCardModel constructor.");
         }
 
-
         if (withDamage == null)
         {
             throw new MissingMethodException(
-                "Could not find ConstructedCardModel.WithDamage(int, int).");
+                "Could not find ConstructedCardModel.WithDamage.");
         }
-
-
-        // =========================================================
-        // APPLY CHANGES
-        // =========================================================
 
         for (int i = 0; i < code.Count; i++)
         {
             // -----------------------------------------------------
             // COST
             //
-            // Original:
-            //     2
-            //
-            // New:
-            //     3
+            // Original: 2
+            // New:      3
             // -----------------------------------------------------
 
             if (code[i].operand is ConstructorInfo constructor &&
                 constructor == watcherCardConstructor)
             {
-                ReplaceInt(
-                    code,
-                    i - 5,
-                    3);
-
+                ReplaceInt(code, i - 5, 3);
                 continue;
             }
 
@@ -114,88 +80,58 @@ public static class LessonLearnedPatch
             // -----------------------------------------------------
             // DAMAGE
             //
-            // Original:
-            //     WithDamage(10, 3)
-            //
-            // New:
-            //     WithDamage(10, 0)
+            // Original: WithDamage(10, 3)
+            // New:      WithDamage(10, 0)
             // -----------------------------------------------------
 
             if (code[i].Calls(withDamage))
             {
-                ReplaceInt(
-                    code,
-                    i - 1,
-                    0);
-
-                continue;
+                ReplaceInt(code, i - 2, 10);
+                ReplaceInt(code, i - 1, 0);
             }
         }
-
 
         return code;
     }
 
 
     // =========================================================
-    // UPGRADE-ONLY RETAIN
+    // COST UPGRADE
     // =========================================================
 
-    [HarmonyPatch(
-        typeof(LessonLearned),
-        MethodType.Constructor)]
+    [HarmonyPatch(typeof(LessonLearned), MethodType.Constructor)]
     [HarmonyPostfix]
     private static void ConstructorPostfix(
         LessonLearned __instance)
     {
-        MethodInfo? withKeyword =
+        AddCostUpgrade(__instance);
+    }
+
+
+    private static void AddCostUpgrade(
+        LessonLearned card)
+    {
+        MethodInfo? withCostUpgradeBy =
             typeof(ConstructedCardModel)
                 .GetMethods(
                     BindingFlags.Instance |
                     BindingFlags.NonPublic)
                 .FirstOrDefault(m =>
-                {
-                    if (m.Name != "WithKeyword")
-                        return false;
+                    m.Name == "WithCostUpgradeBy" &&
+                    m.GetParameters().Length == 1 &&
+                    m.GetParameters()[0].ParameterType ==
+                    typeof(int));
 
-
-                    ParameterInfo[] parameters =
-                        m.GetParameters();
-
-
-                    return
-                        parameters.Length == 2 &&
-                        parameters[0].ParameterType ==
-                        typeof(CardKeyword);
-                });
-
-
-        if (withKeyword == null)
+        if (withCostUpgradeBy == null)
         {
             throw new MissingMethodException(
-                "Could not find ConstructedCardModel.WithKeyword(CardKeyword, UpgradeType).");
+                "Could not find ConstructedCardModel.WithCostUpgradeBy(int).");
         }
 
-
-        Type upgradeType =
-            withKeyword
-                .GetParameters()[1]
-                .ParameterType;
-
-
-        // UpgradeType.Add == 1
-        object addUpgrade =
-            Enum.ToObject(
-                upgradeType,
-                1);
-
-
-        withKeyword.Invoke(
-            __instance,
-            [
-                CardKeyword.Retain,
-                addUpgrade
-            ]);
+        // 3 Energy -> 2 Energy.
+        withCostUpgradeBy.Invoke(
+            card,
+            [-1]);
     }
 
 
@@ -203,9 +139,7 @@ public static class LessonLearnedPatch
     // ON PLAY
     // =========================================================
 
-    [HarmonyPatch(
-        typeof(LessonLearned),
-        "OnPlay")]
+    [HarmonyPatch(typeof(LessonLearned), "OnPlay")]
     [HarmonyPrefix]
     private static bool OnPlayPrefix(
         LessonLearned __instance,
@@ -213,17 +147,16 @@ public static class LessonLearnedPatch
         CardPlay __1,
         ref Task __result)
     {
-        __result =
-            PlayWithCustomFx(
-                __instance,
-                __0,
-                __1);
+        __result = NewOnPlay(
+            __instance,
+            __0,
+            __1);
 
         return false;
     }
 
 
-    private static async Task PlayWithCustomFx(
+    private static async Task NewOnPlay(
         LessonLearned card,
         PlayerChoiceContext choiceContext,
         CardPlay cardPlay)
@@ -232,16 +165,17 @@ public static class LessonLearnedPatch
             return;
 
 
-        // Determine whether Fatal is allowed to trigger.
-        var shouldTriggerFatal =
+        // =====================================================
+        // FATAL CHECK
+        // =====================================================
+
+        bool shouldTriggerFatal =
             cardPlay.Target.Powers.All(
                 p => p.ShouldOwnerDeathTriggerFatal());
 
 
         // =====================================================
         // ATTACK
-        //
-        // Blunt impact + blunt attack sound.
         // =====================================================
 
         var attackCommand =
@@ -257,7 +191,7 @@ public static class LessonLearnedPatch
 
 
         // =====================================================
-        // FATAL
+        // CHECK WHETHER PRIMARY TARGET WAS KILLED
         // =====================================================
 
         if (!shouldTriggerFatal ||
@@ -273,6 +207,10 @@ public static class LessonLearnedPatch
         }
 
 
+        // =====================================================
+        // FIND UPGRADABLE CARDS
+        // =====================================================
+
         var upgradableCards =
             PileType.Deck
                 .GetPile(card.Owner)
@@ -285,7 +223,12 @@ public static class LessonLearnedPatch
             return;
 
 
-        await Cmd.Wait(0.5f);
+        // =====================================================
+        // FATAL UPGRADE EFFECT
+        // =====================================================
+
+        await Cmd.Wait(
+            0.5f);
 
 
         var cardModel =
@@ -293,8 +236,7 @@ public static class LessonLearnedPatch
                 .RunState
                 .Rng
                 .Niche
-                .NextItem(
-                    upgradableCards);
+                .NextItem(upgradableCards);
 
 
         if (cardModel == null)
@@ -304,16 +246,18 @@ public static class LessonLearnedPatch
         card.Owner
             .RunState
             .CurrentMapPointHistoryEntry?
-            .GetEntry(
-                card.Owner.NetId)
+            .GetEntry(card.Owner.NetId)
             .UpgradedCards
-            .Add(
-                cardModel.Id);
+            .Add(cardModel.Id);
 
 
         cardModel.UpgradeInternal();
         cardModel.FinalizeUpgradeInternal();
 
+
+        // =====================================================
+        // UPGRADE VFX
+        // =====================================================
 
         if (LocalContext.IsMe(card.Owner))
         {
@@ -338,25 +282,16 @@ public static class LessonLearnedPatch
         int index,
         int value)
     {
-        CodeInstruction original =
-            code[index];
-
+        CodeInstruction original = code[index];
 
         var replacement =
             new CodeInstruction(
                 OpCodes.Ldc_I4,
                 value);
 
+        replacement.labels.AddRange(original.labels);
+        replacement.blocks.AddRange(original.blocks);
 
-        replacement.labels.AddRange(
-            original.labels);
-
-
-        replacement.blocks.AddRange(
-            original.blocks);
-
-
-        code[index] =
-            replacement;
+        code[index] = replacement;
     }
 }

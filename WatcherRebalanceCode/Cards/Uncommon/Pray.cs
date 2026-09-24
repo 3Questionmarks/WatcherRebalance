@@ -13,36 +13,46 @@ using Watcher.Code.Powers;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Uncommon;
 
+
 [HarmonyPatch]
 public static class PrayPatch
 {
-    [HarmonyPatch(typeof(Pray), MethodType.Constructor)]
+    [HarmonyPatch(
+        typeof(Pray),
+        MethodType.Constructor)]
     [HarmonyPostfix]
     private static void ConstructorPostfix(
         Pray __instance)
     {
-        AddMiracleTooltip(__instance);
+        AddMiracleTooltip(
+            __instance);
     }
 
-    [HarmonyPatch(typeof(Pray), "OnPlay")]
+
+    [HarmonyPatch(
+        typeof(Pray),
+        "OnPlay")]
     [HarmonyPrefix]
     private static bool OnPlayPrefix(
         Pray __instance,
-        PlayerChoiceContext ctx,
-        CardPlay cardPlay,
+        PlayerChoiceContext __0,
+        CardPlay __1,
         ref Task __result)
     {
-        __result = NewOnPlay(
-            __instance,
-            ctx,
-            cardPlay);
+        __result =
+            NewOnPlay(
+                __instance,
+                __0,
+                __1);
+
 
         return false;
     }
 
+
     private static async Task NewOnPlay(
         Pray card,
-        PlayerChoiceContext ctx,
+        PlayerChoiceContext choiceContext,
         CardPlay cardPlay)
     {
         int currentMantra =
@@ -51,36 +61,58 @@ public static class PrayPatch
                 ?.Amount
             ?? 0;
 
+
         int mantraGain =
             card.DynamicVars
                 .Power<MantraPower>()
                 .IntValue;
 
-        // Evaluate Pray's conditional effects using the amount of
-        // Mantra we would have immediately after gaining this card's
-        // Mantra, before reaching 10 can convert Mantra into Divinity.
+
+        // Calculate before gaining Mantra because reaching the threshold can
+        // immediately consume it by entering Divinity.
         int mantraForEffects =
-            currentMantra + mantraGain;
+            currentMantra +
+            mantraGain;
+
 
         await CommonActions.ApplySelf<MantraPower>(
-            ctx,
+            choiceContext,
             card);
 
-        int mantraPerInsight =
-            card.IsUpgraded
-                ? 2
-                : 3;
 
-        int insightCap =
-            card.IsUpgraded
-                ? 5
-                : 3;
+        const int mantraPerInsight =
+            3;
 
-        int insightCount =
-            Math.Min(
-                mantraForEffects / mantraPerInsight,
-                insightCap);
-        
+
+        int insightCount;
+
+
+        if (Config.ScalingDivinityRequirement)
+        {
+            // Scaling mechanic:
+            //
+            // 1 Insight per 3 Mantra with no cap.
+            insightCount =
+                mantraForEffects /
+                mantraPerInsight;
+        }
+        else
+        {
+            // Existing rebalance:
+            //
+            // 1 Insight per 3 Mantra, maximum 3.
+            const int insightCap =
+                3;
+
+
+            insightCount =
+                Math.Min(
+                    mantraForEffects /
+                    mantraPerInsight,
+                    insightCap);
+        }
+
+
         if (insightCount > 0)
         {
             await WatcherCmd.GiveCards<Insight>(
@@ -89,6 +121,7 @@ public static class PrayPatch
                 PileType.Draw,
                 CardPilePosition.Random);
         }
+
 
         //if (mantraForEffects >= 5)
         //{
@@ -100,6 +133,7 @@ public static class PrayPatch
         //}
     }
 
+
     private static void AddMiracleTooltip(
         Pray card)
     {
@@ -108,16 +142,19 @@ public static class PrayPatch
                 .GetMethods(
                     BindingFlags.Instance |
                     BindingFlags.NonPublic)
-                .FirstOrDefault(m =>
-                    m.Name == "WithTip" &&
-                    m.GetParameters().Length == 1 &&
-                    m.GetParameters()[0].ParameterType == typeof(TooltipSource));
+                .FirstOrDefault(method =>
+                    method.Name == "WithTip" &&
+                    method.GetParameters().Length == 1 &&
+                    method.GetParameters()[0].ParameterType ==
+                    typeof(TooltipSource));
+
 
         if (withTip == null)
         {
             throw new MissingMethodException(
                 "Could not find ConstructedCardModel.WithTip(TooltipSource).");
         }
+
 
         //var miracleTip =
         //    new TooltipSource(

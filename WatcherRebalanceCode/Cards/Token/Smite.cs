@@ -132,6 +132,7 @@ public static class SmitePatch
         return false;
     }
 
+
     private static async Task PlayRebalancedSmite(
         Smite card,
         PlayerChoiceContext choiceContext,
@@ -140,27 +141,56 @@ public static class SmitePatch
         if (cardPlay.Target == null)
             return;
 
-        // Preserve Smite's normal attack.
+
+        // =====================================================
+        // ATTACK VFX
+        // =====================================================
+        //
+        // Starry impact is spawned immediately before the
+        // lightning attack so both effects play together.
+        // =====================================================
+
+        VfxCmd.PlayOnCreatureCenter(
+            cardPlay.Target,
+            "vfx/vfx_starry_impact");
+
+
+        // =====================================================
+        // ATTACK
+        // =====================================================
+        //
+        // Lightning attack + lightning orb SFX.
+        // =====================================================
+
         await CommonActions
             .CardAttack(
                 card,
                 cardPlay)
             .WithHitFx(
-                "vfx/vfx_attack_slash")
+                "vfx/vfx_attack_lightning",
+                tmpSfx: "lightning_orb_evoke.mp3")
             .Execute(
                 choiceContext);
+
+
+        // =====================================================
+        // DIVINITY EFFECT
+        // =====================================================
 
         // The Strength loss only occurs in Divinity.
         if (!card.Owner.IsInWatcherStance<DivinityStance>())
             return;
+
 
         int strengthLoss =
             card.DynamicVars
                 .Power<StrengthPower>()
                 .IntValue;
 
+
         if (strengthLoss <= 0)
             return;
+
 
         await PowerCmd.Apply<SmitePower>(
             choiceContext,
@@ -186,8 +216,10 @@ public static class SmitePatch
         if (__result)
             return;
 
+
         if (__instance is not Smite card)
             return;
+
 
         __result =
             card.Owner

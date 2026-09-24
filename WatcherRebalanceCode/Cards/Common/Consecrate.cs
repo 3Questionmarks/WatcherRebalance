@@ -1,50 +1,37 @@
-﻿using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
+﻿using BaseLib.Utils;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using Watcher.Code.Cards.Common;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Common;
 
-[HarmonyPatch]
+[HarmonyPatch(typeof(Consecrate), "OnPlay")]
 public static class ConsecrateVfxPatch
 {
-    static MethodBase TargetMethod()
+    [HarmonyPrefix]
+    private static bool OnPlayPrefix(
+        Consecrate __instance,
+        PlayerChoiceContext __0,
+        CardPlay __1,
+        ref Task __result)
     {
-        MethodInfo onPlay =
-            AccessTools.Method(
-                typeof(Consecrate),
-                "OnPlay")
-            ?? throw new Exception(
-                "WatcherRebalance: Could not find Consecrate.OnPlay");
+        __result = PlayWithCustomFx(
+            __instance,
+            __0,
+            __1);
 
-        Type stateMachineType =
-            onPlay.GetCustomAttribute<AsyncStateMachineAttribute>()
-                ?.StateMachineType
-            ?? throw new Exception(
-                "WatcherRebalance: Could not find Consecrate async state machine");
-
-        return AccessTools.Method(
-                   stateMachineType,
-                   "MoveNext")
-               ?? throw new Exception(
-                   "WatcherRebalance: Could not find Consecrate.MoveNext");
+        return false;
     }
 
-    static IEnumerable<CodeInstruction> Transpiler(
-        IEnumerable<CodeInstruction> instructions)
+    private static async Task PlayWithCustomFx(
+        Consecrate card,
+        PlayerChoiceContext choiceContext,
+        CardPlay cardPlay)
     {
-        foreach (CodeInstruction instruction in instructions)
-        {
-            if (instruction.opcode == OpCodes.Ldstr &&
-                instruction.operand is string value &&
-                value == "vfx/vfx_attack_slash")
-            {
-                instruction.operand =
-                    "vfx/vfx_stabby_line_particles";
-            }
-
-            yield return instruction;
-        }
+        await CommonActions
+            .CardAttack(card, cardPlay)
+            .WithHitFx("vfx/stabby_line_particles")
+            .Execute(choiceContext);
     }
 }

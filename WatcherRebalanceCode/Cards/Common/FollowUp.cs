@@ -144,7 +144,7 @@ public static class FollowUpPatch
             card,
             new object[]
             {
-                8,
+                7,
                 0
             }
         );

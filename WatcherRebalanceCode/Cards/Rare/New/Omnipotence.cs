@@ -71,32 +71,34 @@ public sealed class Omnipotence : WatcherRebalanceCard
     {
         int x = ResolveEnergyXValue();
 
+        // Upgrade adds 1 to both card draw and Mantra.
+        int effectAmount =
+            x + (IsUpgraded ? 1 : 0);
+
 
         // -----------------------------------------------------
-        // DRAW X CARDS
+        // DRAW X / X+1 CARDS
         // -----------------------------------------------------
 
-        if (x > 0)
+        if (effectAmount > 0)
         {
             await CardPileCmd.Draw(
                 choiceContext,
-                x,
+                effectAmount,
                 Owner);
         }
 
 
         // -----------------------------------------------------
-        // GAIN X * 2 MANTRA
+        // GAIN X / X+1 MANTRA
         // -----------------------------------------------------
 
-        int mantraAmount = x * 2;
-
-        if (mantraAmount > 0)
+        if (effectAmount > 0)
         {
             await PowerCmd.Apply<MantraPower>(
                 choiceContext,
                 Owner.Creature,
-                mantraAmount,
+                effectAmount,
                 Owner.Creature,
                 this);
         }

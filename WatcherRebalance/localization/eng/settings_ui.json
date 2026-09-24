@@ -4,6 +4,9 @@
   "WATCHERREBALANCE-REBALANCED_STRENGTH_SCALING.title": "Rebalanced Strength Scaling",
   "WATCHERREBALANCE-REBALANCED_STRENGTH_SCALING.hover.desc": "When enabled, Strength is not effected by Stance Damage Multipliers.",
 
+  "WATCHERREBALANCE-SCALING_DIVINITY_REQUIREMENT.title": "Scaling Divinity Requirement",
+  "WATCHERREBALANCE-SCALING_DIVINITY_REQUIREMENT.hover.desc": "When enabled, the Mantra required to enter Divinity increases by 5 each time Divinity is entered during combat.\n[gold]Requires a restart.[/gold]",
+  
 
   "WATCHERREBALANCE-CALM.title": "Calm",
 

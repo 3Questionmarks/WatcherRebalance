@@ -12,6 +12,11 @@ public sealed class Config : SimpleModConfig
     [ConfigHoverTip]
     public static bool RebalancedStrengthScaling { get; set; } =
         true;
+    
+    [ConfigSection("Core Changes")]
+    [ConfigHoverTip]
+    public static bool ScalingDivinityRequirement { get; set; } =
+        true;
 
 
     // ========================================================================

@@ -52,5 +52,19 @@
   "WATCHERREBALANCE-MANIPULATE_REALITY_POWER.smartDescription": "Scry [blue]{Amount}[/blue], then draw a card.",
   "WATCHERREBALANCE-EMPTY_FIST_POWER.title": "Empty Fist",
   "WATCHERREBALANCE-EMPTY_FIST_POWER.description": "Gain [gold]Strength[/gold] until the end of this turn.",
-  "WATCHERREBALANCE-EMPTY_FIST_POWER.smartDescription": "Gain [blue]{Amount}[/blue] [gold]Strength[/gold] until the end of this turn."
+  "WATCHERREBALANCE-EMPTY_FIST_POWER.smartDescription": "Gain [blue]{Amount}[/blue] [gold]Strength[/gold] until the end of this turn.",
+  "WATCHERREBALANCE-MANTRA_SCALING.smartDescription": "When you reach [blue]{MantraRequirement}[/blue] [gold]Mantra[/gold], enter [gold]Divinity[/gold].\nThe Mantra required increases by [blue]5[/blue] each time you enter [gold]Divinity[/gold] this combat.",
+  "WATCHERREBALANCE-MANTRA_SCALING.description": "When you reach [blue]10[/blue] [gold]Mantra[/gold], enter [gold]Divinity[/gold].\nThe Mantra required increases by [blue]5[/blue] each time you enter [gold]Divinity[/gold] this combat.",
+  "WATCHERREBALANCE-FORESEEN_POWER.title": "Foreseen",
+  "WATCHERREBALANCE-FORESEEN_POWER.description": "The first time each turn you discard exactly 1 card through [gold]Scry[/gold], play it for free, then [gold]Exhaust[/gold] it.",
+  "WATCHERREBALANCE-FORESEEN_POWER.smartDescription": "The first time each turn you discard exactly 1 card through [gold]Scry[/gold], play it for free {Amount} {Amount:plural:times|time}, then [gold]Exhaust[/gold] it.",
+  "WATCHERREBALANCE-TRANSCENDENCE_POWER.title": "Transcendence",
+  "WATCHERREBALANCE-TRANSCENDENCE_POWER.description": "At the start of your turn, choose a card in your Hand to [gold]Transform[/gold].\nAttacks become [gold]Smite[/gold]. Skills become [gold]Safety[/gold]. Powers become [gold]Insight[/gold]. Other cards become [gold]Miracle[/gold].",
+  "WATCHERREBALANCE-TRANSCENDENCE_POWER.smartDescription": "At the start of your turn, choose {Amount} {Amount:plural:cards|card} in your Hand to [gold]Transform[/gold] into a [gold]Token[/gold] depending on its type.",
+  "WATCHERREBALANCE-FLOW_POWER.title": "Flow",
+  "WATCHERREBALANCE-FLOW_POWER.description": "Whenever you change [gold]Stances[/gold], gain [gold]Flow[/gold].",
+  "WATCHERREBALANCE-FLOW_POWER.smartDescription": "Whenever you change [gold]Stances[/gold], gain {Amount} [gold]Flow[/gold].",
+  "WATCHERREBALANCE-FLOW_BUFF_POWER.title": "Flow",
+  "WATCHERREBALANCE-FLOW_BUFF_POWER.description": "Your Attacks deal additional damage and you gain additional Block from cards.\nLose all [gold]Flow[/gold] at the start of your turn.",
+  "WATCHERREBALANCE-FLOW_BUFF_POWER.smartDescription": "Your Attacks deal {Amount} additional damage and you gain {Amount} additional Block from cards.\nLose all [gold]Flow[/gold] at the start of your turn."
 }

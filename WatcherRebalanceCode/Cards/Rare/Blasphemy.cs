@@ -9,6 +9,7 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Hooks;
+using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Models;
 using Watcher.Code.Abstract;
 using Watcher.Code.Cards.Rare;
@@ -16,32 +17,18 @@ using Watcher.Code.Commands;
 using Watcher.Code.Powers;
 using WatcherRebalance.WatcherRebalanceCode.Cards.Token;
 using WatcherRebalance.WatcherRebalanceCode.Cards.Token.New;
+using WatcherRebalance.WatcherRebalanceCode.MechanicTweaks;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Rare;
 
 
-// =============================================================
-// BLASPHEMY CONSTRUCTOR PATCH
-// =============================================================
-//
-// Original:
-//
-//     1 Energy
-//     Apply BlasphemerPower
-//     Enter Divinity
-//     Exhaust
-//     Upgrade: Retain
-//
-// Rebalance:
-//
-//     2 Energy
-//     Gain 10 Mantra
-//     Apply BlasphemerPower
-//     Exhaust
-//     Upgrade: Retain
-// =============================================================
+// ============================================================================
+// BLASPHEMY CONSTRUCTOR
+// ============================================================================
 
-[HarmonyPatch(typeof(Blasphemy), MethodType.Constructor)]
+[HarmonyPatch(
+    typeof(Blasphemy),
+    MethodType.Constructor)]
 public static class BlasphemyConstructorPatch
 {
     private static readonly MethodInfo? WithMantraPower =
@@ -68,13 +55,16 @@ public static class BlasphemyConstructorPatch
             });
 
 
+    // ========================================================================
+    // COST: 1 -> 2
+    // ========================================================================
+
     [HarmonyTranspiler]
     private static IEnumerable<CodeInstruction> Transpiler(
         IEnumerable<CodeInstruction> instructions)
     {
         List<CodeInstruction> code =
             instructions.ToList();
-
 
         ConstructorInfo? watcherCardConstructor =
             typeof(WatcherCardModel)
@@ -85,21 +75,14 @@ public static class BlasphemyConstructorPatch
                 .FirstOrDefault(constructor =>
                     constructor.GetParameters().Length == 5);
 
-
         if (watcherCardConstructor == null)
         {
             throw new MissingMethodException(
                 "WatcherRebalance: Could not find WatcherCardModel constructor.");
         }
 
-
-        // =====================================================
-        // BASE COST: 1 -> 2
-        // =====================================================
-
         bool changedCost =
             false;
-
 
         for (int i = 0; i < code.Count; i++)
         {
@@ -109,15 +92,12 @@ public static class BlasphemyConstructorPatch
             if (constructor != watcherCardConstructor)
                 continue;
 
-
             CodeInstruction original =
                 code[i - 5];
 
-
             CodeInstruction replacement =
-                new CodeInstruction(
+                new(
                     OpCodes.Ldc_I4_2);
-
 
             replacement.labels.AddRange(
                 original.labels);
@@ -125,10 +105,8 @@ public static class BlasphemyConstructorPatch
             replacement.blocks.AddRange(
                 original.blocks);
 
-
             code[i - 5] =
                 replacement;
-
 
             changedCost =
                 true;
@@ -136,21 +114,24 @@ public static class BlasphemyConstructorPatch
             break;
         }
 
-
         if (!changedCost)
         {
             throw new Exception(
                 "WatcherRebalance: Failed to change Blasphemy base cost to 2.");
         }
 
-
         return code;
     }
 
 
-    // =========================================================
-    // ADD MANTRA VARIABLE
-    // =========================================================
+    // ========================================================================
+    // MANTRA VARIABLE
+    // ========================================================================
+    //
+    // Keep the card's canonical 10-Mantra variable.
+    //
+    // This is used when ScalingDivinityRequirement is disabled.
+    // ========================================================================
 
     [HarmonyPostfix]
     private static void Postfix(
@@ -159,11 +140,9 @@ public static class BlasphemyConstructorPatch
         if (WithMantraPower == null)
             return;
 
-
         MethodInfo mantraMethod =
             WithMantraPower.MakeGenericMethod(
                 typeof(MantraPower));
-
 
         mantraMethod.Invoke(
             __instance,
@@ -173,41 +152,83 @@ public static class BlasphemyConstructorPatch
                 true
             ]);
     }
+}
 
 
-    private static bool IsLoadInt(
-        CodeInstruction instruction,
-        int value)
+// ============================================================================
+// BLASPHEMY DESCRIPTION VARIABLES
+// ============================================================================
+//
+// CardModel.GetDescriptionForPile() calls AddExtraArgsToDescription(LocString).
+// Patch that actual base method and filter to Blasphemy.
+//
+// ============================================================================
+
+[HarmonyPatch]
+public static class BlasphemyDescriptionArgsPatch
+{
+    private static MethodBase? TargetMethod()
     {
-        if (value != 1)
-            return false;
+        return typeof(CardModel)
+            .GetMethod(
+                "AddExtraArgsToDescription",
+                BindingFlags.Instance |
+                BindingFlags.NonPublic,
+                null,
+                [
+                    typeof(LocString)
+                ],
+                null);
+    }
 
 
-        return
-            instruction.opcode == OpCodes.Ldc_I4_1 ||
+    [HarmonyPostfix]
+    private static void Postfix(
+        CardModel __instance,
+        LocString __0)
+    {
+        if (__instance is not Blasphemy blasphemy)
+            return;
 
-            instruction.opcode == OpCodes.Ldc_I4_S &&
-            instruction.operand is sbyte shortValue &&
-            shortValue == 1 ||
+        bool scaling =
+            Config.ScalingDivinityRequirement;
 
-            instruction.opcode == OpCodes.Ldc_I4 &&
-            instruction.operand is int intValue &&
-            intValue == 1;
+        __0.Add(
+            "ScalingDivinity",
+            scaling);
+
+        if (!scaling)
+            return;
+
+        int mantraGain =
+            ScalingMantra.BaseRequirement;
+
+        try
+        {
+            if (blasphemy.IsMutable &&
+                blasphemy.Owner?.PlayerCombatState != null)
+            {
+                mantraGain =
+                    ScalingMantra.GetBlasphemyMantraGain(
+                        blasphemy.Owner);
+            }
+        }
+        catch
+        {
+            mantraGain =
+                ScalingMantra.BaseRequirement;
+        }
+
+        __0.Add(
+            "BlasphemyMantra",
+            (decimal)mantraGain);
     }
 }
 
 
-// =============================================================
+// ============================================================================
 // PENDING SECOND BLASPHEMY
-// =============================================================
-//
-// We still want Blasphemy itself to completely finish playing
-// before the punishment begins.
-//
-// Therefore OnPlay only marks the card.
-//
-// Hook.AfterCardPlayed starts the punishment afterwards.
-// =============================================================
+// ============================================================================
 
 internal static class BlasphemyPunishment
 {
@@ -216,9 +237,9 @@ internal static class BlasphemyPunishment
 }
 
 
-// =============================================================
-// BLASPHEMY PLAY PATCH
-// =============================================================
+// ============================================================================
+// BLASPHEMY ON PLAY
+// ============================================================================
 
 [HarmonyPatch]
 public static class BlasphemyOnPlayPatch
@@ -253,7 +274,6 @@ public static class BlasphemyOnPlayPatch
                 __0,
                 __1);
 
-
         return false;
     }
 
@@ -267,56 +287,67 @@ public static class BlasphemyOnPlayPatch
             card.Owner.Creature;
 
 
-        // =====================================================
-        // NORMAL BLASPHEMY
-        // =====================================================
-        //
-        // If the Easter egg is disabled, every Blasphemy uses
-        // the normal rebalanced behavior.
-        //
-        // If the Easter egg is enabled, this is also the
-        // behavior of the first Blasphemy played this combat.
-        //
-        // Gain 10 Mantra first.
-        //
-        // THEN apply Blasphemer so our Mantra prevention logic
-        // does not block this initial gain.
-        // =====================================================
+        // ====================================================================
+        // NORMAL / FIRST BLASPHEMY
+        // ====================================================================
 
         if (!Config.EnableBlasphemyEasterEgg ||
             !creature.HasPower<BlasphemerPower>())
         {
-            await CommonActions.ApplySelf<MantraPower>(
-                choiceContext,
-                card);
+            if (Config.ScalingDivinityRequirement)
+            {
+                // ============================================================
+                // SCALING MODE
+                // ============================================================
+                //
+                // Gain exactly enough Mantra to reach the current Divinity
+                // requirement.
+                // ============================================================
+
+                int mantraGain =
+                    ScalingMantra.GetBlasphemyMantraGain(
+                        card.Owner);
+
+                if (mantraGain > 0)
+                {
+                    await PowerCmd.Apply<MantraPower>(
+                        choiceContext,
+                        creature,
+                        mantraGain,
+                        creature,
+                        card);
+                }
+            }
+            else
+            {
+                // ============================================================
+                // FIXED MODE
+                // ============================================================
+                //
+                // Existing behavior:
+                //
+                // Gain 10 Mantra.
+                // ============================================================
+
+                await CommonActions.ApplySelf<MantraPower>(
+                    choiceContext,
+                    card);
+            }
 
 
+            // Blasphemer must be applied AFTER the Mantra gain.
             await CommonActions.ApplySelf<BlasphemerPower>(
                 choiceContext,
                 card,
                 1);
 
-
             return;
         }
 
 
-        // =====================================================
+        // ====================================================================
         // SECOND BLASPHEMY — EASTER EGG
-        // =====================================================
-        //
-        // Only reachable when:
-        //
-        // 1. EnableBlasphemyEasterEgg is enabled.
-        //
-        // AND
-        //
-        // 2. The player already has BlasphemerPower.
-        //
-        // Don't start the punishment inside OnPlay.
-        //
-        // Allow Blasphemy to finish first.
-        // =====================================================
+        // ====================================================================
 
         BlasphemyPunishment.Pending.Add(
             card);
@@ -324,9 +355,9 @@ public static class BlasphemyOnPlayPatch
 }
 
 
-// =============================================================
-// AFTER SECOND BLASPHEMY PLAYS
-// =============================================================
+// ============================================================================
+// AFTER SECOND BLASPHEMY
+// ============================================================================
 
 [HarmonyPatch(
     typeof(Hook),
@@ -340,13 +371,10 @@ public static class BlasphemyAfterCardPlayedPatch
         PlayerChoiceContext __1,
         CardPlay __2)
     {
-        // Let the game's normal AfterCardPlayed hook finish.
         await __result;
-
 
         if (__2.Card is not Blasphemy blasphemy)
             return;
-
 
         if (!BlasphemyPunishment.Pending.Remove(
                 blasphemy))
@@ -354,21 +382,8 @@ public static class BlasphemyAfterCardPlayedPatch
             return;
         }
 
-
-        // =====================================================
-        // CONFIG SAFETY
-        // =====================================================
-        //
-        // Normally the config is checked during OnPlay.
-        //
-        // Check it again here in case the player changes the
-        // setting between the card being marked and the
-        // AfterCardPlayed hook resolving.
-        // =====================================================
-
         if (!Config.EnableBlasphemyEasterEgg)
             return;
-
 
         await RunPunishment(
             blasphemy,
@@ -376,72 +391,45 @@ public static class BlasphemyAfterCardPlayedPatch
     }
 
 
-    // =========================================================
+    // ========================================================================
     // PREPARE JUDGEMENT
-    // =========================================================
-    //
-    // This method stops after the ten cards have been generated.
-    //
-    // Nothing automatically plays them here.
-    //
-    // The player is returned to normal control and can inspect
-    // the cards for as long as desired.
-    //
-    // They resolve when the player presses End Turn.
-    // =========================================================
+    // ========================================================================
 
     private static async Task RunPunishment(
         Blasphemy card,
         PlayerChoiceContext choiceContext)
     {
-        // =====================================================
-        // ERASE HAND
-        // =====================================================
-
+        // Hand
         await ExhaustPile(
             choiceContext,
             card,
             PileType.Hand);
 
-
-        // =====================================================
-        // ERASE DRAW PILE
-        // =====================================================
-
+        // Draw
         await ExhaustPile(
             choiceContext,
             card,
             PileType.Draw);
 
-
-        // =====================================================
-        // ERASE DISCARD PILE
-        // =====================================================
-
+        // Discard
         await ExhaustPile(
             choiceContext,
             card,
             PileType.Discard);
 
-
-        // Short dramatic pause after the deck disappears.
         await Task.Delay(
             100);
 
 
-        // =====================================================
-        // GENERATE THE TEN JUDGEMENTS
-        // =====================================================
-        //
-        // Each one enters at a random position.
-        // =====================================================
+        // ====================================================================
+        // TEN JUDGEMENTS
+        // ====================================================================
 
         await WatcherCmd.GiveCard<Unworthy>(
             card.Owner,
             PileType.Hand,
             CardPilePosition.Random,
             skipAnimation: true);
-
 
         await Task.Delay(
             100);
@@ -453,7 +441,6 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-
         await Task.Delay(
             100);
 
@@ -463,7 +450,6 @@ public static class BlasphemyAfterCardPlayedPatch
             PileType.Hand,
             CardPilePosition.Random,
             skipAnimation: true);
-
 
         await Task.Delay(
             100);
@@ -475,7 +461,6 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-
         await Task.Delay(
             100);
 
@@ -485,7 +470,6 @@ public static class BlasphemyAfterCardPlayedPatch
             PileType.Hand,
             CardPilePosition.Random,
             skipAnimation: true);
-
 
         await Task.Delay(
             100);
@@ -497,7 +481,6 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-
         await Task.Delay(
             100);
 
@@ -507,7 +490,6 @@ public static class BlasphemyAfterCardPlayedPatch
             PileType.Hand,
             CardPilePosition.Random,
             skipAnimation: true);
-
 
         await Task.Delay(
             100);
@@ -519,7 +501,6 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-
         await Task.Delay(
             100);
 
@@ -530,7 +511,6 @@ public static class BlasphemyAfterCardPlayedPatch
             CardPilePosition.Random,
             skipAnimation: true);
 
-
         await Task.Delay(
             100);
 
@@ -540,25 +520,12 @@ public static class BlasphemyAfterCardPlayedPatch
             PileType.Hand,
             CardPilePosition.Random,
             skipAnimation: true);
-
-
-        // =====================================================
-        // DONE
-        // =====================================================
-        //
-        // Deliberately stop here.
-        //
-        // No CardCmd.AutoPlay.
-        //
-        // The player now has control and can inspect the ten
-        // cards until they decide to end their turn.
-        // =====================================================
     }
 
 
-    // =========================================================
-    // EXHAUST AN ENTIRE PILE
-    // =========================================================
+    // ========================================================================
+    // EXHAUST PILE
+    // ========================================================================
 
     private static async Task ExhaustPile(
         PlayerChoiceContext choiceContext,
@@ -569,12 +536,10 @@ public static class BlasphemyAfterCardPlayedPatch
             pileType.GetPile(
                 blasphemy.Owner);
 
-
-        // Snapshot because CardCmd.Exhaust mutates the pile.
+        // Snapshot because exhausting cards mutates the pile.
         List<CardModel> cards =
             pile.Cards
                 .ToList();
-
 
         foreach (CardModel card in cards)
         {
@@ -584,7 +549,6 @@ public static class BlasphemyAfterCardPlayedPatch
             {
                 continue;
             }
-
 
             await CardCmd.Exhaust(
                 choiceContext,

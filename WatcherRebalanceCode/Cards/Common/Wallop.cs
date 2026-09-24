@@ -20,7 +20,7 @@ public static class WallopPatch
      *
      * Common
      *
-     * Deal 7 (11) damage.
+     * Deal 7 (10) damage.
      * Gain Block equal to unblocked damage dealt.
      */
 
@@ -71,7 +71,7 @@ public static class WallopPatch
             // WithDamage(9, 3)
             //
             // New:
-            // WithDamage(7, 4)
+            // WithDamage(7, 3)
             // -------------------------------------------------
 
             if (!damagePatched &&
@@ -83,7 +83,7 @@ public static class WallopPatch
                     );
 
                 ReplaceInt(code, i - 2, 7);
-                ReplaceInt(code, i - 1, 4);
+                ReplaceInt(code, i - 1, 3);
 
                 damagePatched = true;
             }

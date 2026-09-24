@@ -25,11 +25,10 @@ public static class ProstratePatch
      * Gain 2 (3) Mantra.
      * Gain 2 (3) Block.
      *
-     * Gain additional Block equal to half
+     * Gain additional Block equal to one third
      * the Mantra gained this combat.
      *
-     * Half Mantra is always rounded down.
-     *
+     *      *
      * The displayed Block includes the Mantra
      * that this Prostrate is about to grant.
      */
@@ -143,15 +142,15 @@ public static class ProstratePatch
          *
          * Base Block:     2
          * Upgrade:       +1
-         * Calculated:    + floor(total Mantra / 2)
+         * Calculated:    + floor(total Mantra / 3)
          *
          * Therefore:
          *
          * Prostrate:
-         * 2 Block + half Mantra
+         * 2 Block + 1/3rd Mantra
          *
          * Prostrate+:
-         * 3 Block + half Mantra
+         * 3 Block + 1/3rd Mantra
          */
 
         MethodInfo? withCalculatedBlock =
@@ -282,7 +281,7 @@ public static class ProstratePatch
          * 5 Mantra -> 2 Block
          */
         return decimal.Floor(
-            totalMantra / 2m
+            totalMantra / 3m
         );
     }
 
@@ -364,14 +363,14 @@ public static class ProstratePatch
 
         /*
          * Additional Block =
-         * half of all Mantra gained this combat,
+         * 1/3rd of all Mantra gained this combat,
          * including this Prostrate's Mantra.
          *
          * Always round down.
          */
         int bonusBlock =
             (int)decimal.Floor(
-                (mantraAlreadyGained + mantraFromThisCard) / 2m
+                (mantraAlreadyGained + mantraFromThisCard) / 3m
             );
 
         int totalBlock =

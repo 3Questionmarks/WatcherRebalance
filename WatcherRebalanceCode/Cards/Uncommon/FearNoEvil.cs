@@ -53,25 +53,41 @@ public static class FearNoEvilPatch
 
         for (int i = 0; i < code.Count; i++)
         {
-            //if (code[i].operand is ConstructorInfo constructor &&
-            //    constructor == watcherCardConstructor)
-            //{
-            //    // Cost 1 -> 2
-            //    ReplaceInt(code, i - 5, 2);
-            //    continue;
-            //}
+            // -----------------------------------------------------
+            // COST
+            //
+            // Original: 1
+            // New:      2
+            // -----------------------------------------------------
+
+            if (code[i].operand is ConstructorInfo constructor &&
+                constructor == watcherCardConstructor)
+            {
+                ReplaceInt(code, i - 5, 2);
+                continue;
+            }
+
+            // -----------------------------------------------------
+            // DAMAGE
+            //
+            // Original: WithDamage(8, 3)
+            // New:      WithDamage(6, 0)
+            // -----------------------------------------------------
 
             if (code[i].Calls(withDamage))
             {
-                // Original: WithDamage(8, 3)
-                // New:      WithDamage(6, 3)
                 ReplaceInt(code, i - 2, 6);
-                ReplaceInt(code, i - 1, 3);
+                ReplaceInt(code, i - 1, 0);
             }
         }
 
         return code;
     }
+
+
+    // =========================================================
+    // CONSTRUCTOR ADDITIONS
+    // =========================================================
 
     [HarmonyPatch(typeof(FearNoEvil), MethodType.Constructor)]
     [HarmonyPostfix]
@@ -79,24 +95,31 @@ public static class FearNoEvilPatch
         FearNoEvil __instance)
     {
         AddBlock(__instance);
+        AddCostUpgrade(__instance);
         AddWrathTooltip(__instance);
     }
+
+
+    // =========================================================
+    // ON PLAY
+    // =========================================================
 
     [HarmonyPatch(typeof(FearNoEvil), "OnPlay")]
     [HarmonyPrefix]
     private static bool OnPlayPrefix(
         FearNoEvil __instance,
-        PlayerChoiceContext ctx,
-        CardPlay cardPlay,
+        PlayerChoiceContext __0,
+        CardPlay __1,
         ref Task __result)
     {
         __result = NewOnPlay(
             __instance,
-            ctx,
-            cardPlay);
+            __0,
+            __1);
 
         return false;
     }
+
 
     private static async Task NewOnPlay(
         FearNoEvil card,
@@ -109,6 +132,11 @@ public static class FearNoEvilPatch
         bool hasAttackIntent =
             cardPlay.Target.Monster?.IntendsToAttack
             ?? false;
+
+
+        // =====================================================
+        // STANCE EFFECT
+        // =====================================================
 
         if (hasAttackIntent)
         {
@@ -126,22 +154,34 @@ public static class FearNoEvilPatch
         else
         {
             // Non-attack intent:
-            // Enter Wrath first so the attack benefits
-            // from Wrath's damage multiplier.
+            // Enter Wrath before attacking so the attack
+            // benefits from Wrath's damage multiplier.
             await StanceCmd.EnterWrath(
                 ctx,
                 card.Owner,
                 cardPlay.Card);
         }
 
-        // Always deal damage after the stance change.
+
+        // =====================================================
+        // ATTACK
+        // =====================================================
+
         await CommonActions
-            .CardAttack(card, cardPlay)
+            .CardAttack(
+                card,
+                cardPlay)
             .WithHitFx(
                 "vfx/vfx_attack_blunt",
                 tmpSfx: "blunt_attack.mp3")
-            .Execute(ctx);
+            .Execute(
+                ctx);
     }
+
+
+    // =========================================================
+    // BLOCK
+    // =========================================================
 
     private static void AddBlock(
         FearNoEvil card)
@@ -158,11 +198,48 @@ public static class FearNoEvilPatch
                 "Could not find ConstructedCardModel.WithBlock.");
         }
 
-        // 6(9) Block.
+        // 6 Block.
+        // No Block increase on upgrade.
         withBlock.Invoke(
             card,
-            [6, 3]);
+            [6, 0]);
     }
+
+
+    // =========================================================
+    // COST UPGRADE
+    // =========================================================
+
+    private static void AddCostUpgrade(
+        FearNoEvil card)
+    {
+        MethodInfo? withCostUpgradeBy =
+            typeof(ConstructedCardModel)
+                .GetMethods(
+                    BindingFlags.Instance |
+                    BindingFlags.NonPublic)
+                .FirstOrDefault(m =>
+                    m.Name == "WithCostUpgradeBy" &&
+                    m.GetParameters().Length == 1 &&
+                    m.GetParameters()[0].ParameterType ==
+                    typeof(int));
+
+        if (withCostUpgradeBy == null)
+        {
+            throw new MissingMethodException(
+                "Could not find ConstructedCardModel.WithCostUpgradeBy(int).");
+        }
+
+        // 2 Energy -> 1 Energy.
+        withCostUpgradeBy.Invoke(
+            card,
+            [-1]);
+    }
+
+
+    // =========================================================
+    // WRATH TOOLTIP
+    // =========================================================
 
     private static void AddWrathTooltip(
         FearNoEvil card)
@@ -187,6 +264,11 @@ public static class FearNoEvilPatch
             .MakeGenericMethod(typeof(WrathStance))
             .Invoke(card, null);
     }
+
+
+    // =========================================================
+    // INTEGER REPLACEMENT
+    // =========================================================
 
     private static void ReplaceInt(
         List<CodeInstruction> code,

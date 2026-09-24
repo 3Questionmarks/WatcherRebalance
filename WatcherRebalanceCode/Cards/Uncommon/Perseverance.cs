@@ -42,8 +42,9 @@ public static class PerseverancePatch
             // WithBlock(5, 2)
             //
             // New:
-            // WithBlock(6, 2)
+            // WithBlock(6, 3
             ReplaceInt(code, i - 2, 6);
+            ReplaceInt(code, i - 1, 3);
 
             break;
         }
