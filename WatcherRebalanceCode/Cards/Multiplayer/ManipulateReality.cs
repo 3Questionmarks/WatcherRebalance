@@ -1,4 +1,4 @@
-﻿using BaseLib.Cards.Variables;
+using BaseLib.Cards.Variables;
 using BaseLib.Commands;
 using BaseLib.Extensions;
 using BaseLib.Utils;
@@ -32,6 +32,17 @@ public sealed class ManipulateReality()
         // Also hide it from the card library while disabled.
         Config.EnableManipulateReality)
 {
+    // Reuse Watcher's shared Foresight portrait unless legacy art is selected.
+    public override string CustomPortraitPath =>
+        Config.UseLegacyManipulateRealityArtwork
+            ? base.CustomPortraitPath
+            : "Watcher/images/atlases/card_atlas.sprites/shared_foresight.tres";
+
+    public override string PortraitPath =>
+        Config.UseLegacyManipulateRealityArtwork
+            ? base.PortraitPath
+            : "Watcher/images/atlases/card_atlas.sprites/shared_foresight.tres";
+
     // ================================================================
     // SCRY
     // ================================================================
@@ -49,6 +60,12 @@ public sealed class ManipulateReality()
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
         new ScryVar(3)
+    ];
+
+
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+    [
+        CardKeyword.Exhaust
     ];
 
 

@@ -66,5 +66,8 @@
   "WATCHERREBALANCE-FLOW_POWER.smartDescription": "Whenever you change [gold]Stances[/gold], gain {Amount} [gold]Flow[/gold].",
   "WATCHERREBALANCE-FLOW_BUFF_POWER.title": "Flow",
   "WATCHERREBALANCE-FLOW_BUFF_POWER.description": "Your Attacks deal additional damage and you gain additional Block from cards.\nLose all [gold]Flow[/gold] at the start of your turn.",
-  "WATCHERREBALANCE-FLOW_BUFF_POWER.smartDescription": "Your Attacks deal {Amount} additional damage and you gain {Amount} additional Block from cards.\nLose all [gold]Flow[/gold] at the start of your turn."
+  "WATCHERREBALANCE-FLOW_BUFF_POWER.smartDescription": "Your Attacks deal {Amount} additional damage and you gain {Amount} additional Block from cards.\nLose all [gold]Flow[/gold] at the start of your turn.",
+  "WATCHERREBALANCE-FLEETING_CLARITY_POWER.title": "Fleeting Clarity",
+  "WATCHERREBALANCE-FLEETING_CLARITY_POWER.smartDescription": "At the start of your next turn, exit [gold]Calm[/gold] if you are still in it.",
+  "WATCHERREBALANCE-FLEETING_CLARITY_POWER.description": "At the start of your next turn, exit [gold]Calm[/gold] if you are still in it."
 }

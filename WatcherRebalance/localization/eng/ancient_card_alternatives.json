@@ -1,0 +1,6 @@
+{
+  "WATCHERREBALANCE-ANCIENT_RUSHDOWN.title": "Rushdown",
+  "WATCHERREBALANCE-ANCIENT_RUSHDOWN.description": "Whenever you enter [gold]Wrath[/gold], draw {RushdownPower:diff()} cards.",
+  "WATCHERREBALANCE-ERUPTION_REVELATION.title": "Revelation",
+  "WATCHERREBALANCE-ERUPTION_REVELATION.description": "Deal {Damage:diff()} damage.\nEnter [gold]Wrath[/gold].\nGain {MantraPower:diff()} [gold]Mantra[/gold]."
+}

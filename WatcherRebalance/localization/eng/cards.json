@@ -148,7 +148,11 @@
   "WATCHERREBALANCE-WRATH_CARD.title": "Wrath",
   "WATCHERREBALANCE-WRATH_CARD.description": "Enter [gold]Wrath[/gold].",
   "WATCHERREBALANCE-FLOW.title": "Flow",
-  "WATCHERREBALANCE-FLOW.description": "Whenever you change [gold]Stances[/gold], gain 1 [gold]Flow[/gold]."
+  "WATCHERREBALANCE-FLOW.description": "Whenever you change [gold]Stances[/gold], gain 1 [gold]Flow[/gold].",
+  "WATCHERREBALANCE-FLEETING_CLARITY.title": "Fleeting Clarity",
+  "WATCHERREBALANCE-FLEETING_CLARITY.description": "Another player enters [gold]Calm[/gold].\nIf you are in [gold]Calm[/gold], all other players enter [gold]Calm[/gold].\nAt the start of their next turn they exit [gold]Calm[/gold].",
+  "WATCHERREBALANCE-ANCIENT_RUSHDOWN.title": "Rushdown",
+  "WATCHERREBALANCE-ANCIENT_RUSHDOWN.description": "Whenever you enter [gold]Wrath[/gold], draw {RushdownPower:diff()} cards.",
+  "WATCHERREBALANCE-ERUPTION_REVELATION.title": "Revelation",
+  "WATCHERREBALANCE-ERUPTION_REVELATION.description": "Deal {Damage:diff()} damage.\nEnter [gold]Wrath[/gold].\nGain {MantraPower:diff()} [gold]Mantra[/gold]."
 }
-
-

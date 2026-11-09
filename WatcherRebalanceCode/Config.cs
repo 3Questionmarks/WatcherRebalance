@@ -1,4 +1,4 @@
-﻿using BaseLib.Config;
+using BaseLib.Config;
 
 namespace WatcherRebalance.WatcherRebalanceCode;
 
@@ -145,6 +145,26 @@ public sealed class Config : SimpleModConfig
     [ConfigSection("Multiplayer Cards")]
     [ConfigHoverTip]
     public static bool EnableManipulateReality { get; set; } = true;
+
+    [ConfigSection("Multiplayer Cards")]
+    [ConfigHoverTip]
+    public static bool UseOmnipresence { get; set; } = true;
+
+    [ConfigSection("Multiplayer Cards")]
+    [ConfigHoverTip]
+    public static bool UseLegacyManipulateRealityArtwork { get; set; } = false;
+
+    [ConfigSection("Multiplayer Cards")]
+    [ConfigHoverTip]
+    public static bool UseLegacyMultiplayerStanceCards { get; set; } = false;
+
+    [ConfigSection("Ancient Cards")]
+    [ConfigHoverTip]
+    public static bool UseAncientRushdown { get; set; } = false;
+
+    [ConfigSection("Ancient Cards")]
+    [ConfigHoverTip]
+    public static bool UseEruptionRevelation { get; set; } = true;
     
     
     // ========================================================================

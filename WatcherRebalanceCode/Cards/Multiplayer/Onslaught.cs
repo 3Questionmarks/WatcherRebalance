@@ -1,4 +1,4 @@
-﻿using BaseLib.Utils;
+using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
@@ -18,8 +18,9 @@ public sealed class Onslaught()
     : WatcherRebalanceCard(
         2,
         CardType.Skill,
-        CardRarity.Uncommon,
-        TargetType.AnyAlly)
+        Config.UseLegacyMultiplayerStanceCards ? CardRarity.Uncommon : CardRarity.Token,
+        TargetType.AnyAlly,
+        Config.UseLegacyMultiplayerStanceCards)
 {
     // ================================================================
     // POWER VARIABLE

@@ -1,4 +1,4 @@
-﻿using BaseLib.Utils;
+using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Players;
@@ -13,8 +13,9 @@ namespace WatcherRebalance.WatcherRebalanceCode.Cards.Multiplayer;
 public sealed class Omnipresence() : WatcherRebalanceCard(
     2,
     CardType.Skill,
-    CardRarity.Rare,
-    TargetType.None)
+    Config.UseOmnipresence ? CardRarity.Rare : CardRarity.Token,
+    TargetType.None,
+    Config.UseOmnipresence)
 {
     public override CardMultiplayerConstraint MultiplayerConstraint =>
         CardMultiplayerConstraint.MultiplayerOnly;

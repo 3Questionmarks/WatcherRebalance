@@ -9,6 +9,7 @@ using Watcher.Code.Cards.Common;
 using Watcher.Code.Cards.Rare;
 using Watcher.Code.Cards.Token;
 using Watcher.Code.Cards.Uncommon;
+using Watcher.Code.Cards.Multiplayer;
 
 namespace WatcherRebalance.WatcherRebalanceCode.Cards.Removed;
 
@@ -220,6 +221,11 @@ public static class RemovedWatcherCardSafetyPatch
     {
         return card switch
         {
+            GiftOfMiracles => Config.UseOmnipresence,
+            SharedForesight => Config.EnableManipulateReality,
+            HoldFast => Config.UseLegacyMultiplayerStanceCards,
+            StanceBlessing => Config.UseLegacyMultiplayerStanceCards,
+
             PressurePoints =>
                 !Config.RestorePressurePoints,
             
