@@ -117,7 +117,7 @@ public static class CarveRealityPatch
 
         VfxCmd.PlayOnCreatureCenter(
             cardPlay.Target,
-            "vfx/vfx_starry_impact");
+            "vfx/vfx_starry_impact", forceIfDead: false);
 
         // Add the normal Smite.
         await WatcherCmd.GiveCard<Smite>(

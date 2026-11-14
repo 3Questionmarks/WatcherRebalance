@@ -120,7 +120,7 @@ public static class TantrumPatch
 
         VfxCmd.PlayOnCreatureCenter(
             cardPlay.Target,
-            "vfx/vfx_fire_burst");
+            "vfx/vfx_fire_burst", forceIfDead: false);
 
         // =====================================================
         // ENTER WRATH

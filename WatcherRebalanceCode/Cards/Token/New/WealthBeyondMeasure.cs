@@ -20,7 +20,7 @@ public sealed class WealthBeyondMeasure() : DivineInterventionChoice(CardType.Po
     {
         VfxCmd.PlayOnCreature(
             Owner.Creature,
-            "vfx/vfx_coin_explosion_regular");
+            "vfx/vfx_coin_explosion_regular", forceIfDead: false);
 
 
         await PlayerCmd.GainGold(

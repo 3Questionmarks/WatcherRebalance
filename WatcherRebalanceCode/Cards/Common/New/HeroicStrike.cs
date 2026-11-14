@@ -69,7 +69,7 @@ public sealed class HeroicStrike() : WatcherRebalanceCard(
 
         VfxCmd.PlayOnCreatureCenter(
             cardPlay.Target,
-            "vfx/star_gain_vfx");
+            "vfx/star_gain_vfx", forceIfDead: false);
 
 
         // =====================================================

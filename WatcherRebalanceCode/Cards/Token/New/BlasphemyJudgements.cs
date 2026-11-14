@@ -275,7 +275,7 @@ public abstract class BlasphemyJudgementCard()
 
         VfxCmd.PlayOnCreature(
             creature,
-            "vfx/vfx_attack_lightning");
+            "vfx/vfx_attack_lightning", forceIfDead: false);
 
 
         SfxCmd.Play(

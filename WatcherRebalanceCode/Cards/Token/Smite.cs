@@ -152,7 +152,7 @@ public static class SmitePatch
 
         VfxCmd.PlayOnCreatureCenter(
             cardPlay.Target,
-            "vfx/vfx_starry_impact");
+            "vfx/vfx_starry_impact", forceIfDead: false);
 
 
         // =====================================================
